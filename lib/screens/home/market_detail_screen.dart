@@ -17,11 +17,10 @@ class MarketDetailScreen extends StatefulWidget {
 }
 
 class _MarketDetailScreenState extends State<MarketDetailScreen> {
-  bool? _side; // true = YES, false = NO
+// true = YES, false = NO
   final _amountController = TextEditingController(text: '10');
 
   void _openTradeSheet(bool side) {
-    setState(() => _side = side);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
