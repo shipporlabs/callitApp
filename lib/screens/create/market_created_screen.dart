@@ -1,14 +1,43 @@
 import 'package:flutter/material.dart';
+import '../../core/api/callit_api.dart';
 import '../../core/app_images.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_image.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 
-class MarketCreatedScreen extends StatelessWidget {
-  const MarketCreatedScreen({super.key, required this.question});
+class MarketCreatedScreen extends StatefulWidget {
+  const MarketCreatedScreen({super.key, required this.question, this.marketId});
 
   final String question;
+  final String? marketId;
+
+  @override
+  State<MarketCreatedScreen> createState() => _MarketCreatedScreenState();
+}
+
+class _MarketCreatedScreenState extends State<MarketCreatedScreen> {
+  String? _shareUrl;
+  bool _preparingShare = false;
+
+  Future<void> _share() async {
+    final marketId = widget.marketId;
+    if (marketId == null || marketId.isEmpty) return;
+    setState(() => _preparingShare = true);
+    try {
+      final card = await callitApi.createShareCard(marketId);
+      if (!mounted) return;
+      setState(() => _shareUrl = card['deepLink'] as String? ?? card['imageUrl'] as String?);
+      // Hook point: hand `_shareUrl` to the platform share sheet
+      // (share_plus or similar) instead of just displaying it.
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Share link ready: $_shareUrl')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Couldn't prepare a share card right now.")));
+    } finally {
+      if (mounted) setState(() => _preparingShare = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +61,7 @@ class MarketCreatedScreen extends StatelessWidget {
               Text('Your market is live', style: AppTextStyles.h1, textAlign: TextAlign.center),
               const SizedBox(height: 12),
               Text(
-                question,
+                widget.question,
                 style: AppTextStyles.subtitle,
                 textAlign: TextAlign.center,
                 maxLines: 3,
@@ -45,7 +74,7 @@ class MarketCreatedScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const Spacer(),
-              AppButton(label: 'Share market', icon: Icons.ios_share_rounded, onPressed: () {}),
+              AppButton(label: 'Share market', icon: Icons.ios_share_rounded, loading: _preparingShare, onPressed: _share),
               const SizedBox(height: 12),
               AppButton(
                 label: 'View market',

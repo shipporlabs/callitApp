@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/api/api_exception.dart';
+import '../../core/api/callit_api.dart';
+import '../../core/api/token_store.dart';
 import '../../core/widgets/app_button.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -22,12 +25,25 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
   void _submit() async {
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const AddWalletScreen(fromSignUp: true)),
-      (route) => false,
-    );
+    try {
+      final result = await callitApi.verify(email: widget.email, code: _code);
+      final user = (result['user'] as Map?)?.cast<String, dynamic>();
+      await TokenStore.instance.saveSession(
+        token: result['token'] as String,
+        userId: user?['id'] as String?,
+        userName: user?['name'] as String?,
+        userEmail: user?['email'] as String?,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AddWalletScreen(fromSignUp: true)),
+        (route) => false,
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 
   @override

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../core/api/token_store.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../home/home_screen.dart';
 import '../onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -17,8 +19,11 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(const Duration(milliseconds: 1100), () {
       if (!mounted) return;
+      // TokenStore is already loaded (see main.dart) — a returning,
+      // signed-in user skips onboarding entirely.
+      final loggedIn = TokenStore.instance.isAuthenticated;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        MaterialPageRoute(builder: (_) => loggedIn ? const HomeScreen() : const OnboardingScreen()),
       );
     });
   }

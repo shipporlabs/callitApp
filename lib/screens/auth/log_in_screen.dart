@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/api/api_exception.dart';
+import '../../core/api/callit_api.dart';
+import '../../core/api/token_store.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -21,13 +24,29 @@ class _LogInScreenState extends State<LogInScreen> {
 
   void _submit() async {
     setState(() => _loading = true);
-    // Hook point: POST /auth/token/ against the Panta-backed auth server.
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-      (route) => false,
-    );
+    try {
+      final result = await callitApi.login(email: _emailController.text.trim(), password: _passwordController.text);
+      final token = result['token'] as String?;
+      if (token == null) {
+        throw ApiException(statusCode: 0, code: 'NO_TOKEN', message: 'Login succeeded but no session token came back.');
+      }
+      final user = (result['user'] as Map?)?.cast<String, dynamic>();
+      await TokenStore.instance.saveSession(
+        token: token,
+        userId: user?['id'] as String?,
+        userName: user?['name'] as String?,
+        userEmail: user?['email'] as String? ?? _emailController.text.trim(),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 
   @override

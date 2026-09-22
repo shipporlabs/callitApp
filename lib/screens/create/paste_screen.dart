@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/api/api_exception.dart';
+import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_button.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -26,15 +28,23 @@ class _PasteScreenState extends State<PasteScreen> {
 
   void _compile() async {
     setState(() => _compiling = true);
-    // Hook point: send `_controller.text` to your AI compiler, which
-    // returns a draft matching Panta's create schema (question,
-    // resolutionRule, sourcesOfTruth, category, times, imageUrl).
-    await Future.delayed(const Duration(milliseconds: 1300));
-    if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ReviewMarketScreen(rawInput: _controller.text)),
-    );
-    setState(() => _compiling = false);
+    try {
+      final result = await callitApi.compile(_controller.text.trim());
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ReviewMarketScreen(rawInput: _controller.text, compiled: result)),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      // Fall through so a slow/offline compiler doesn't block the demo —
+      // the review screen has its own local fallback draft.
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ReviewMarketScreen(rawInput: _controller.text)),
+      );
+    } finally {
+      if (mounted) setState(() => _compiling = false);
+    }
   }
 
   @override

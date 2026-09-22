@@ -1,5 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import '../../core/app_images.dart';
+import '../../core/api/token_store.dart';
+import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_image.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -23,8 +27,14 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
   void _connect(String provider) async {
     setState(() => _connecting = provider);
     // Hook point: launch Solana Mobile Wallet Adapter, request
-    // authorization, store the returned public key.
+    // authorization, and store the *real* returned public key below —
+    // every call that needs a wallet (quotes, orders, positions, claims)
+    // reads it from TokenStore. This generates a placeholder pubkey-shaped
+    // string so the rest of the app has something to send until MWA is
+    // wired in.
     await Future.delayed(const Duration(milliseconds: 1200));
+    if (!mounted) return;
+    await TokenStore.instance.saveWallet(address: _mockPublicKey(), provider: provider);
     if (!mounted) return;
     if (widget.fromSignUp) {
       Navigator.of(context).pushAndRemoveUntil(
@@ -34,6 +44,12 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
     } else {
       Navigator.of(context).pop(true);
     }
+  }
+
+  static String _mockPublicKey() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789';
+    final rand = Random();
+    return List.generate(44, (_) => chars[rand.nextInt(chars.length)]).join();
   }
 
   void _skip() {

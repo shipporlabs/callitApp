@@ -51,22 +51,27 @@ class MarketCard extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               YesNoBar(yesPct: market.yesPricePct),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  AppAvatar(initials: market.creatorInitials, size: 22),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      market.creatorHandle,
-                      style: AppTextStyles.caption,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (market.volumeLabel != null)
-                    Text(market.volumeLabel!, style: AppTextStyles.caption),
-                ],
-              ),
+              if (market.creatorHandle.isNotEmpty || market.volumeLabel != null) ...[
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    if (market.creatorHandle.isNotEmpty) ...[
+                      AppAvatar(initials: market.creatorInitials, size: 22),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          market.creatorHandle,
+                          style: AppTextStyles.caption,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ] else
+                      const Spacer(),
+                    if (market.volumeLabel != null)
+                      Text(market.volumeLabel!, style: AppTextStyles.caption),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

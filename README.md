@@ -58,25 +58,52 @@ with the exact name listed in `assets/images/README.md` or
 automatically; no code changes needed. `lib/core/widgets/app_image.dart`
 is what makes that fallback work (`Image.asset` with an `errorBuilder`).
 
-## What's real vs. mocked — read before demoing
+## Wired to the Callit API
 
-This is the UI and interaction design, built to the Callit PRD and brand.
-It is **not** wired to the live Panta API yet. Every screen that would call
-Panta has a comment marking the hook point, matching the PRD's architecture
-(a server holds the API key; the app never talks to Panta directly):
+The app talks to the `callit-api` server (the Callit OpenAPI spec) through
+`lib/core/api/`:
 
-| Screen | Hook point |
+- `api_config.dart` — the base URL. Defaults to the shared dev VPS from the
+  spec (`http://quirky-comet.62-171-156-198.sslip.io:8095/v1`). Point it at
+  `http://10.0.2.2:8095/v1` for an Android emulator hitting your own
+  machine, or your LAN IP for a real device.
+- `api_client.dart` — the envelope-aware HTTP layer (`{"data":...}` /
+  `{"error":...}`), adds the bearer JWT automatically.
+- `callit_api.dart` — one method per endpoint, grouped by the spec's tags.
+- `token_store.dart` — persists the session JWT and the connected wallet
+  address across app restarts (`SharedPreferences`); `main.dart` loads it
+  before the first frame so `SplashScreen` can skip onboarding for a
+  returning, signed-in user.
+
+**Both dev servers in the spec are plain HTTP, no TLS yet.** Once you run
+`flutter create .` to add the `android/` and `ios/` folders, you'll need:
+- Android: `android:usesCleartextTraffic="true"` on `<application>` in
+  `android/app/src/main/AndroidManifest.xml` (or a `<network-security-config>`
+  scoped to just that host).
+- iOS: an `NSAppTransportSecurity` → `NSExceptionDomains` entry for the host
+  in `ios/Runner/Info.plist`.
+
+| Screen | Calls |
 | --- | --- |
-| Sign up / log in | Your auth backend (`/auth/register/`, `/auth/token/`) |
-| Add wallet | Solana Mobile Wallet Adapter |
-| Paste → Review | Your AI compiler, then `POST /markets/create/quote/` → `build/` → `register/` |
-| Market detail buy sheet | `POST /orders/quote/` → `build/` → wallet sign → `submit/` → `verify/` |
-| Wallet screen | `GET /positions/` + a Solana RPC balance check |
-| Convert screen | A swap route of your choosing |
-| Profile dashboard | `GET /account/metrics/`, `POST /claim/creator-fees/build/` |
+| Sign up → verify | `POST /auth/register` → `POST /auth/verify` (saves the JWT) |
+| Log in | `POST /auth/login` |
+| Add wallet | Still simulated — generates a placeholder pubkey and saves it via `TokenStore.saveWallet`. Swap in Solana Mobile Wallet Adapter and save the *real* returned public key the same way; everything downstream already reads it from there. |
+| Markets feed | `GET /markets`, `GET /categories` — falls back to `lib/data/mock_markets.dart` if the server's unreachable |
+| Market detail | `GET /markets/{id}` on open; buy sheet runs `POST /orders/quote` → `/build` → (simulated signature) → `/submit` → `/verify` → `POST /trades/report` |
+| Paste → Review | `POST /ai/compile`, then `POST /markets/create/quote` → `/build` → (simulated signature) → `/register` |
+| Market created | `POST /share-card` when you tap "Share market" |
+| Wallet tab | `GET /positions` for the wallet address in `TokenStore`; USDC/SOL balance display is still a placeholder — that's a Solana RPC call, not a Panta one |
+| Claim (wallet + profile) | `POST /claims/win`, `POST /claims/creator-fees` — both return *unsigned* instructions, so the wallet still needs to sign and broadcast them |
+| Profile | `GET /me/markets` for the creator dashboard stats |
 
-Mock data lives in `lib/data/mock_markets.dart` — replace it with a
-repository that calls your server proxy once that's built.
+The one step no server proxy can do for you: **the wallet signature**.
+Every flow above builds the real unsigned transaction from the live API
+and then simulates the sign step with a random string — search for
+"Hook point" in `market_detail_screen.dart`, `review_market_screen.dart`,
+and `add_wallet_screen.dart` for exactly where Mobile Wallet Adapter goes.
+
+Mock data in `lib/data/mock_markets.dart` is now only a fallback for when
+the server can't be reached, not the primary source.
 
 ## Brand
 

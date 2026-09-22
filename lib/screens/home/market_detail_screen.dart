@@ -1,4 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import '../../core/api/api_exception.dart';
+import '../../core/api/callit_api.dart';
+import '../../core/api/token_store.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/pill_chip.dart';
@@ -6,6 +11,7 @@ import '../../core/widgets/yes_no_bar.dart';
 import '../../models/market.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../wallet/add_wallet_screen.dart';
 
 class MarketDetailScreen extends StatefulWidget {
   const MarketDetailScreen({super.key, required this.market});
@@ -17,25 +23,46 @@ class MarketDetailScreen extends StatefulWidget {
 }
 
 class _MarketDetailScreenState extends State<MarketDetailScreen> {
-// true = YES, false = NO
-  final _amountController = TextEditingController(text: '10');
+  late Market _market = widget.market;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  /// Best-effort: refresh with live odds from `GET /markets/{id}`. The
+  /// card passed in already has everything needed to render, so a
+  /// failed refresh (offline, market removed) just keeps that.
+  Future<void> _refresh() async {
+    if (_market.id.isEmpty) return;
+    try {
+      final json = await callitApi.getMarket(_market.id);
+      if (!mounted) return;
+      setState(() => _market = Market.fromApi(json));
+    } catch (_) {
+      // Keep showing what we were passed.
+    }
+  }
 
   void _openTradeSheet(bool side) {
+    if (!TokenStore.instance.hasWallet) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddWalletScreen())).then((_) {
+        if (TokenStore.instance.hasWallet && mounted) _openTradeSheet(side);
+      });
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _TradeSheet(
-        market: widget.market,
-        side: side,
-        amountController: _amountController,
-      ),
+      builder: (context) => _TradeSheet(market: _market, side: side),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final market = widget.market;
+    final market = _market;
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
@@ -62,12 +89,14 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                AppAvatar(initials: market.creatorInitials, size: 26),
-                const SizedBox(width: 8),
-                Text(market.creatorHandle, style: AppTextStyles.caption),
-                const SizedBox(width: 12),
-                const Icon(Icons.circle, size: 4, color: AppColors.slate),
-                const SizedBox(width: 12),
+                if (market.creatorHandle.isNotEmpty) ...[
+                  AppAvatar(initials: market.creatorInitials, size: 26),
+                  const SizedBox(width: 8),
+                  Text(market.creatorHandle, style: AppTextStyles.caption),
+                  const SizedBox(width: 12),
+                  const Icon(Icons.circle, size: 4, color: AppColors.slate),
+                  const SizedBox(width: 12),
+                ],
                 Text(market.resolvesLabel, style: AppTextStyles.caption),
               ],
             ),
@@ -167,32 +196,82 @@ class _SideButton extends StatelessWidget {
   }
 }
 
-/// Mirrors Panta's real flow: quote → build → sign in wallet → broadcast →
-/// confirm. Here it's simulated end to end so the interaction is complete;
-/// wire the marked steps to the server proxy for the live version.
+/// Panta's real buy flow: quote → build → sign in wallet → broadcast →
+/// submit → verify. Every step here except the signature itself hits the
+/// live Callit API; the signature is a placeholder until a real Solana
+/// Mobile Wallet Adapter session is wired into [AddWalletScreen] (that's
+/// the one step a server proxy can never do for you — Panta is
+/// non-custodial by design).
 class _TradeSheet extends StatefulWidget {
-  const _TradeSheet({required this.market, required this.side, required this.amountController});
+  const _TradeSheet({required this.market, required this.side});
 
   final Market market;
   final bool side;
-  final TextEditingController amountController;
 
   @override
   State<_TradeSheet> createState() => _TradeSheetState();
 }
 
-enum _TradeStep { amount, signing, done }
+enum _TradeStep { amount, signing, done, error }
 
 class _TradeSheetState extends State<_TradeSheet> {
   _TradeStep _step = _TradeStep.amount;
+  final _amountController = TextEditingController(text: '10');
+  String? _errorMessage;
+  Map<String, dynamic>? _quote;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
 
   void _confirm() async {
+    final wallet = TokenStore.instance.walletAddress!;
     setState(() => _step = _TradeStep.signing);
-    // Hook point: POST /orders/quote/ → /orders/build/ → wallet sign →
-    // broadcast → /orders/submit/ → /orders/verify/.
-    await Future.delayed(const Duration(milliseconds: 1400));
-    if (!mounted) return;
-    setState(() => _step = _TradeStep.done);
+    try {
+      final quote = await callitApi.orderQuote(
+        wallet: wallet,
+        marketId: widget.market.id,
+        side: widget.side,
+        amountUsdc: double.parse(_amountController.text).toStringAsFixed(2),
+      );
+      final build = await callitApi.orderBuild(quoteId: quote['quoteId'] as String, wallet: wallet);
+
+      // Hook point: hand `build['transaction']` (base64) to Solana Mobile
+      // Wallet Adapter for the user's real signature. Simulated here.
+      await Future.delayed(const Duration(milliseconds: 900));
+      final signature = _mockSignature();
+
+      final orderId = build['orderId'] as String;
+      await callitApi.orderSubmit(orderId: orderId, signature: signature);
+      await callitApi.orderVerify(orderId: orderId, signature: signature);
+      await callitApi.reportTrade(signature: signature, wallet: wallet, marketId: widget.market.id, quoteId: quote['quoteId'] as String);
+
+      if (!mounted) return;
+      setState(() {
+        _quote = quote;
+        _step = _TradeStep.done;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.message;
+        _step = _TradeStep.error;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Something went wrong placing that trade.';
+        _step = _TradeStep.error;
+      });
+    }
+  }
+
+  String _mockSignature() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789';
+    final rand = Random();
+    return List.generate(64, (_) => chars[rand.nextInt(chars.length)]).join();
   }
 
   @override
@@ -228,7 +307,7 @@ class _TradeSheetState extends State<_TradeSheet> {
             Text('Amount (USDC)', style: AppTextStyles.body(13, weight: FontWeight.w600, color: AppColors.slate)),
             const SizedBox(height: 8),
             TextField(
-              controller: widget.amountController,
+              controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               style: AppTextStyles.h2,
               decoration: const InputDecoration(prefixText: '\$ '),
@@ -239,19 +318,42 @@ class _TradeSheetState extends State<_TradeSheet> {
               children: ['5', '10', '25', '50'].map((v) {
                 return ChoiceChip(
                   label: Text('\$$v'),
-                  selected: widget.amountController.text == v,
-                  onSelected: (_) => setState(() => widget.amountController.text = v),
+                  selected: _amountController.text == v,
+                  onSelected: (_) => setState(() => _amountController.text = v),
                 );
               }).toList(),
             ),
             const SizedBox(height: 24),
-            AppButton(label: 'Review and sign', onPressed: _confirm),
+            AppButton(
+              label: 'Review and sign',
+              onPressed: (double.tryParse(_amountController.text) ?? 0) > 0 ? _confirm : null,
+            ),
           ] else if (_step == _TradeStep.signing) ...[
             const SizedBox(height: 24),
             const Center(child: CircularProgressIndicator(color: AppColors.ink)),
             const SizedBox(height: 20),
             Text('Waiting for your wallet to sign…', style: AppTextStyles.subtitle, textAlign: TextAlign.center),
             const SizedBox(height: 40),
+          ] else if (_step == _TradeStep.error) ...[
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: const BoxDecoration(color: AppColors.no, shape: BoxShape.circle),
+                    child: const Icon(Icons.close_rounded, color: AppColors.white, size: 32),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Trade failed', style: AppTextStyles.h2),
+                  const SizedBox(height: 8),
+                  Text(_errorMessage ?? 'Please try again.', style: AppTextStyles.subtitle, textAlign: TextAlign.center),
+                  const SizedBox(height: 24),
+                  AppButton(label: 'Try again', onPressed: () => setState(() => _step = _TradeStep.amount)),
+                ],
+              ),
+            ),
           ] else ...[
             Center(
               child: Column(
@@ -267,7 +369,8 @@ class _TradeSheetState extends State<_TradeSheet> {
                   Text('Position confirmed', style: AppTextStyles.h2),
                   const SizedBox(height: 8),
                   Text(
-                    'You backed $label with \$${widget.amountController.text} USDC.',
+                    'You backed $label with \$${_amountController.text} USDC'
+                    '${_quote?['shares'] != null ? ' for ${_quote!['shares']} shares' : ''}.',
                     style: AppTextStyles.subtitle,
                     textAlign: TextAlign.center,
                   ),

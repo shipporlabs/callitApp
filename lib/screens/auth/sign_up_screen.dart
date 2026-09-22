@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/api/api_exception.dart';
+import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -23,13 +25,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _submit() async {
     setState(() => _loading = true);
-    // Hook point: call your auth backend / Panta account register here.
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    setState(() => _loading = false);
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => VerifyOtpScreen(email: _emailController.text)),
-    );
+    try {
+      await callitApi.register(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => VerifyOtpScreen(email: _emailController.text.trim())),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
