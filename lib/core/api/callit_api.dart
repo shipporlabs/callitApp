@@ -62,6 +62,12 @@ class CallitApi {
     return (data as Map?)?['items'] as List<dynamic>? ?? [];
   }
 
+  Future<List<dynamic>> getWalletTrades(String wallet) async {
+    final data = await _c.get('/wallets/$wallet/trades', auth: false);
+    if (data is List) return data;
+    return (data as Map?)?['items'] as List<dynamic>? ?? [];
+  }
+
   /// The fixed 8-value category enum, straight from the server — falls
   /// back to the spec's own list if the call fails, so the filter chips
   /// never come up empty.

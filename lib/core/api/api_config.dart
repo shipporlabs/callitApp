@@ -16,8 +16,8 @@
 class ApiConfig {
   ApiConfig._();
 
-  /// Default: the shared dev VPS from the Callit OpenAPI spec.
-  static String baseUrl = 'http://quirky-comet.62-171-156-198.sslip.io:8095/v1';
+  /// Default: the live public HTTPS Cloudflare tunnel pointing to the dev VPS.
+  static String baseUrl = 'https://trek-grateful-formatting-specifies.trycloudflare.com/v1';
 
   static const Duration timeout = Duration(seconds: 20);
 }
