@@ -74,6 +74,7 @@ class _ConnectedWallet extends StatefulWidget {
 
 class _ConnectedWalletState extends State<_ConnectedWallet> {
   List<Map<String, dynamic>> _positions = [];
+  List<Map<String, dynamic>> _tradeHistory = [];
   bool _loading = true;
 
   @override
@@ -87,10 +88,14 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
     if (wallet == null) return;
     setState(() => _loading = true);
     try {
-      final result = await callitApi.positions(wallet);
+      final posFuture = callitApi.positions(wallet);
+      final tradesFuture = callitApi.getWalletTrades(wallet);
+      final posResult = await posFuture;
+      final tradesResult = await tradesFuture;
       if (!mounted) return;
       setState(() {
-        _positions = result.cast<Map<String, dynamic>>();
+        _positions = posResult.cast<Map<String, dynamic>>();
+        _tradeHistory = tradesResult.whereType<Map<String, dynamic>>().toList();
         _loading = false;
       });
     } catch (_) {
@@ -172,6 +177,63 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
                   padding: const EdgeInsets.only(bottom: 14),
                   child: _PositionTile(position: p),
                 )),
+          const SizedBox(height: 28),
+          SectionHeader(title: 'Recent trades', action: 'Refresh', onActionTap: _loadPositions),
+          const SizedBox(height: 14),
+          if (_tradeHistory.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                border: Border.all(color: AppColors.mist),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Center(
+                child: Text('No trades recorded for this wallet yet.', style: AppTextStyles.caption),
+              ),
+            )
+          else
+            ..._tradeHistory.map((t) {
+              final isYes = (t['side']?.toString().toLowerCase() == 'yes');
+              final marketId = t['marketId']?.toString() ?? 'Market';
+              final amount = t['amountUsdc']?.toString() ?? t['shares']?.toString() ?? '—';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    border: Border.all(color: AppColors.mist),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          PillChip(
+                            label: isYes ? 'YES' : 'NO',
+                            background: isYes ? AppColors.yes : AppColors.no,
+                            foreground: AppColors.white,
+                            dense: true,
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(marketId, style: AppTextStyles.body(13, weight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text('Completed trade', style: AppTextStyles.caption),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Text('\$$amount USDC', style: AppTextStyles.tabularNums(13, weight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+              );
+            }),
         ],
       ),
     );

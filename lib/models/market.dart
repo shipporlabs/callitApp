@@ -63,6 +63,10 @@ class Market {
     // Panta's own phase enum (primary → secondary once a market's bonding
     // curve is done) is the closest signal until the API adds one.
     final phase = json['phase'] as String?;
+    final images = json['images'] as List?;
+    final imagePath = (images != null && images.isNotEmpty)
+        ? images.first?.toString()
+        : (json['imageUrl'] as String?);
 
     return Market(
       id: (json['marketId'] as String?) ?? '',
@@ -71,6 +75,7 @@ class Market {
       yesPricePct: yesPricePct,
       resolvesLabel: resolvesLabel,
       volumeLabel: volumeLabel,
+      imagePath: imagePath,
       isGraduated: phase == 'secondary',
     );
   }

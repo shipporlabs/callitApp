@@ -31,17 +31,45 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
     _refresh();
   }
 
-  /// Best-effort: refresh with live odds from `GET /markets/{id}`. The
-  /// card passed in already has everything needed to render, so a
-  /// failed refresh (offline, market removed) just keeps that.
+  List<Map<String, dynamic>> _trades = [];
+  bool _loadingTrades = true;
+
+  /// Best-effort: refresh with live odds from `GET /markets/{id}` and
+  /// recent trade activity from `GET /markets/{id}/trades`.
   Future<void> _refresh() async {
     if (_market.id.isEmpty) return;
     try {
-      final json = await callitApi.getMarket(_market.id);
+      final jsonFuture = callitApi.getMarket(_market.id);
+      final tradesFuture = callitApi.getMarketTrades(_market.id);
+      final json = await jsonFuture;
+      final trades = await tradesFuture;
       if (!mounted) return;
-      setState(() => _market = Market.fromApi(json));
+      setState(() {
+        _market = Market.fromApi(json);
+        _trades = trades.whereType<Map<String, dynamic>>().toList();
+        _loadingTrades = false;
+      });
     } catch (_) {
       // Keep showing what we were passed.
+      if (mounted) setState(() => _loadingTrades = false);
+    }
+  }
+
+  bool _sharing = false;
+
+  Future<void> _shareMarket() async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    try {
+      final card = await callitApi.createShareCard(widget.market.id);
+      final shareUrl = card['deepLink'] as String? ?? card['imageUrl'] as String? ?? 'https://callit.my/market/${widget.market.id}';
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Share link ready: $shareUrl')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Couldn't prepare share card right now.")));
+    } finally {
+      if (mounted) setState(() => _sharing = false);
     }
   }
 
@@ -68,7 +96,12 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
       appBar: AppBar(
         leading: const BackButton(),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.ios_share_rounded)),
+          IconButton(
+            onPressed: _sharing ? null : _shareMarket,
+            icon: _sharing
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.ios_share_rounded),
+          ),
           const SizedBox(width: 8),
         ],
       ),
@@ -76,6 +109,19 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
           children: [
+            if (market.imagePath != null && market.imagePath!.isNotEmpty) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  market.imagePath!,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -163,6 +209,70 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 28),
+            Text('Recent activity', style: AppTextStyles.h3),
+            const SizedBox(height: 10),
+            if (_loadingTrades)
+              const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: AppColors.ink)))
+            else if (_trades.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  border: Border.all(color: AppColors.mist),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text('No trades yet — be the first to call it!', style: AppTextStyles.caption),
+                ),
+              )
+            else
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  border: Border.all(color: AppColors.mist),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _trades.length > 5 ? 5 : _trades.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.mist),
+                  itemBuilder: (context, i) {
+                    final t = _trades[i];
+                    final isYes = (t['side']?.toString().toLowerCase() == 'yes');
+                    final amount = t['amountUsdc']?.toString() ?? t['shares']?.toString() ?? '—';
+                    final wallet = t['wallet']?.toString() ?? '';
+                    final shortWallet = wallet.length > 8 ? '${wallet.substring(0, 4)}…${wallet.substring(wallet.length - 4)}' : wallet;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: isYes ? AppColors.yes.withOpacity(0.12) : AppColors.no.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  isYes ? 'YES' : 'NO',
+                                  style: AppTextStyles.tabularNums(12, weight: FontWeight.w700, color: isYes ? AppColors.yes : AppColors.no),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(shortWallet.isNotEmpty ? shortWallet : 'Trader', style: AppTextStyles.body(13, weight: FontWeight.w500)),
+                            ],
+                          ),
+                          Text('\$$amount USDC', style: AppTextStyles.tabularNums(13, weight: FontWeight.w600)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
           ],
         ),
       ),
@@ -247,6 +357,9 @@ class _TradeSheetState extends State<_TradeSheet> {
       await callitApi.orderSubmit(orderId: orderId, signature: signature);
       await callitApi.orderVerify(orderId: orderId, signature: signature);
       await callitApi.reportTrade(signature: signature, wallet: wallet, marketId: widget.market.id, quoteId: quote['quoteId'] as String);
+      try {
+        await callitApi.tradeStatus(signature);
+      } catch (_) {}
 
       if (!mounted) return;
       setState(() {
