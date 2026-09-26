@@ -8,6 +8,7 @@ import '../../models/market.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'market_detail_screen.dart';
+import '../community/communities_screen.dart';
 
 class MarketsTab extends StatefulWidget {
   const MarketsTab({super.key, this.searchMode = false});
@@ -114,9 +115,22 @@ class _MarketsTabState extends State<MarketsTab> {
                           Text('Callit', style: AppTextStyles.display(20, weight: FontWeight.w700)),
                         ],
                       ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.notifications_outlined, color: AppColors.ink),
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const CommunitiesScreen()),
+                              );
+                            },
+                            icon: const Icon(Icons.groups_outlined, color: AppColors.ink),
+                            tooltip: 'Communities & Leaderboard',
+                          ),
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.notifications_outlined, color: AppColors.ink),
+                          ),
+                        ],
                       ),
                     ],
                   ),

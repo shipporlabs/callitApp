@@ -6,11 +6,15 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'review_market_screen.dart';
 
+import '../../models/community.dart';
+
 /// Step 1 of Callit's core flow: paste a headline, a tweet, or a raw
 /// question. The next screen is where the AI-compiled draft is reviewed
 /// before anything is quoted against Panta.
 class PasteScreen extends StatefulWidget {
-  const PasteScreen({super.key});
+  const PasteScreen({super.key, this.initialCommunity});
+
+  final Community? initialCommunity;
 
   @override
   State<PasteScreen> createState() => _PasteScreenState();
@@ -32,7 +36,13 @@ class _PasteScreenState extends State<PasteScreen> {
       final result = await callitApi.compile(_controller.text.trim());
       if (!mounted) return;
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ReviewMarketScreen(rawInput: _controller.text, compiled: result)),
+        MaterialPageRoute(
+          builder: (_) => ReviewMarketScreen(
+            rawInput: _controller.text,
+            compiled: result,
+            initialCommunity: widget.initialCommunity,
+          ),
+        ),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -40,7 +50,12 @@ class _PasteScreenState extends State<PasteScreen> {
       // Fall through so a slow/offline compiler doesn't block the demo —
       // the review screen has its own local fallback draft.
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ReviewMarketScreen(rawInput: _controller.text)),
+        MaterialPageRoute(
+          builder: (_) => ReviewMarketScreen(
+            rawInput: _controller.text,
+            initialCommunity: widget.initialCommunity,
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _compiling = false);
