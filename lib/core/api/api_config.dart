@@ -17,7 +17,7 @@ class ApiConfig {
   ApiConfig._();
 
   /// Default: the live public HTTPS Cloudflare tunnel pointing to the dev VPS.
-  static String baseUrl = 'https://query-instructions-logical-accessories.trycloudflare.com/v1';
+  static String baseUrl = 'https://jackets-vampire-branches-toner.trycloudflare.com/v1';
 
   static const Duration timeout = Duration(seconds: 20);
 }
