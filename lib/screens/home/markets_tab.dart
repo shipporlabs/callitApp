@@ -24,9 +24,8 @@ class _MarketsTabState extends State<MarketsTab> {
   final _searchController = TextEditingController();
   final List<String> _categories = List.of(CallitApi.fallbackCategories);
 
-  List<Market> _markets = List.of(mockMarkets);
+  List<Market> _markets = [];
   bool _loading = true;
-  bool _usingFallback = false;
 
   @override
   void initState() {
@@ -57,16 +56,12 @@ class _MarketsTabState extends State<MarketsTab> {
       if (!mounted) return;
       setState(() {
         _markets = items.map(Market.fromApi).toList();
-        _usingFallback = false;
         _loading = false;
       });
     } catch (_) {
-      // Offline / server unreachable — fall back to local demo markets so
-      // the feed is never empty, filtered the same way.
       if (!mounted) return;
       setState(() {
-        _markets = List.of(mockMarkets);
-        _usingFallback = true;
+        _markets = [];
         _loading = false;
       });
     }
@@ -90,8 +85,7 @@ class _MarketsTabState extends State<MarketsTab> {
     final filtered = _markets.where((m) {
       final matchesSearch = _searchController.text.isEmpty ||
           m.question.toLowerCase().contains(_searchController.text.toLowerCase());
-      // The fallback demo data isn't filtered server-side, so match locally.
-      final matchesCategory = !_usingFallback || _category == null || m.categoryApiValue == _category;
+      final matchesCategory = _category == null || m.categoryApiValue == _category;
       return matchesSearch && matchesCategory;
     }).toList();
 

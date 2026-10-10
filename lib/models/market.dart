@@ -68,9 +68,15 @@ class Market {
         ? images.first?.toString()
         : (json['imageUrl'] as String?);
 
+    final titleStr = (json['title'] as String?)?.trim();
+    final questionStr = (json['question'] as String?)?.trim();
+    final resolvedQuestion = (titleStr != null && titleStr.isNotEmpty)
+        ? titleStr
+        : ((questionStr != null && questionStr.isNotEmpty) ? questionStr : 'Untitled market');
+
     return Market(
       id: (json['marketId'] as String?) ?? '',
-      question: (json['title'] as String?) ?? (json['question'] as String?) ?? 'Untitled market',
+      question: resolvedQuestion,
       category: category,
       yesPricePct: yesPricePct,
       resolvesLabel: resolvesLabel,

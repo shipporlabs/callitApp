@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/api/token_store.dart';
+import '../../core/api/solana_service.dart';
 import '../../core/widgets/pill_chip.dart';
 import '../../core/widgets/section_header.dart';
 import '../../theme/app_colors.dart';
@@ -75,6 +76,7 @@ class _ConnectedWallet extends StatefulWidget {
 class _ConnectedWalletState extends State<_ConnectedWallet> {
   List<Map<String, dynamic>> _positions = [];
   List<Map<String, dynamic>> _tradeHistory = [];
+  SolanaBalances? _balances;
   bool _loading = true;
 
   @override
@@ -90,12 +92,15 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
     try {
       final posFuture = callitApi.positions(wallet);
       final tradesFuture = callitApi.getWalletTrades(wallet);
+      final balFuture = SolanaService.instance.getBalances(wallet);
       final posResult = await posFuture;
       final tradesResult = await tradesFuture;
+      final balResult = await balFuture;
       if (!mounted) return;
       setState(() {
         _positions = posResult.cast<Map<String, dynamic>>();
         _tradeHistory = tradesResult.whereType<Map<String, dynamic>>().toList();
+        _balances = balResult;
         _loading = false;
       });
     } catch (_) {
@@ -137,12 +142,17 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
                 const SizedBox(height: 22),
                 Text('Total balance', style: AppTextStyles.body(13, color: AppColors.inkMuted)),
                 const SizedBox(height: 6),
-                // Hook point: a Solana RPC balance check (getBalance +
-                // the USDC associated token account) belongs here —
-                // Panta itself never returns wallet balances directly.
-                Text('—', style: AppTextStyles.display(36, color: AppColors.paper)),
+                Text(
+                  _balances != null ? '\$${_balances!.totalUsdValue.toStringAsFixed(2)}' : '—',
+                  style: AppTextStyles.display(36, color: AppColors.paper),
+                ),
                 const SizedBox(height: 4),
-                Text('Balance check not wired up yet', style: AppTextStyles.body(13, color: AppColors.inkMuted)),
+                Text(
+                  _balances != null
+                      ? '${_balances!.solBalance.toStringAsFixed(3)} SOL  •  ${_balances!.usdcBalance.toStringAsFixed(2)} USDC'
+                      : (_loading ? 'Fetching on-chain balance…' : '0.00 SOL  •  0.00 USDC'),
+                  style: AppTextStyles.body(13, color: AppColors.inkMuted),
+                ),
                 const SizedBox(height: 22),
                 Row(
                   children: [

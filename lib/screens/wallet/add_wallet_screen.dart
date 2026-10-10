@@ -36,6 +36,10 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
     if (!mounted) return;
     await TokenStore.instance.saveWallet(address: _mockPublicKey(), provider: provider);
     if (!mounted) return;
+    _finishConnect();
+  }
+
+  void _finishConnect() {
     if (widget.fromSignUp) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -44,6 +48,47 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
     } else {
       Navigator.of(context).pop(true);
     }
+  }
+
+  void _showManualAddressDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Enter Solana Address'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Paste your Solana public key (Phantom, Solflare, etc.):'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'e.g. 4VGFQKGanc5oaLf51m...',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              final addr = controller.text.trim();
+              if (addr.isNotEmpty) {
+                Navigator.of(ctx).pop();
+                await TokenStore.instance.saveWallet(address: addr, provider: 'Solana Wallet');
+                if (!mounted) return;
+                _finishConnect();
+              }
+            },
+            child: const Text('Connect'),
+          ),
+        ],
+      ),
+    );
   }
 
   static String _mockPublicKey() {
@@ -102,10 +147,10 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
               ),
               const SizedBox(height: 12),
               _WalletOption(
-                label: 'Other Solana wallet',
-                icon: Icons.qr_code_rounded,
-                connecting: _connecting == 'Other',
-                onTap: () => _connect('Other'),
+                label: 'Enter Solana Address',
+                icon: Icons.edit_note_rounded,
+                connecting: false,
+                onTap: _showManualAddressDialog,
               ),
               const Spacer(),
               if (widget.fromSignUp)
