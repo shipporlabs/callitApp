@@ -18,15 +18,21 @@ class YesNoBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: SizedBox(
-            height: height,
-            child: Row(
-              children: [
-                Expanded(flex: (yes * 10).round().clamp(1, 1000).toInt(), child: Container(color: AppColors.yes)),
-                Expanded(flex: (no * 10).round().clamp(1, 1000).toInt(), child: Container(color: AppColors.no)),
-              ],
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.ink, width: 1.2),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: SizedBox(
+              height: height,
+              child: Row(
+                children: [
+                  Expanded(flex: (yes * 10).round().clamp(1, 1000).toInt(), child: Container(color: AppColors.yes)),
+                  Expanded(flex: (no * 10).round().clamp(1, 1000).toInt(), child: Container(color: AppColors.no)),
+                ],
+              ),
             ),
           ),
         ),
@@ -35,8 +41,8 @@ class YesNoBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('YES ${yes.toStringAsFixed(0)}%', style: AppTextStyles.tabularNums(13, color: AppColors.yes)),
-              Text('NO ${no.toStringAsFixed(0)}%', style: AppTextStyles.tabularNums(13, color: AppColors.no)),
+              Text('YES ${yes.toStringAsFixed(0)}%', style: AppTextStyles.tabularNums(12, color: AppColors.yes)),
+              Text('NO ${no.toStringAsFixed(0)}%', style: AppTextStyles.tabularNums(12, color: AppColors.no)),
             ],
           ),
         ],

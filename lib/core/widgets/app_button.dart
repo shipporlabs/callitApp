@@ -35,12 +35,12 @@ class AppButton extends StatelessWidget {
       case AppButtonVariant.primary:
         background = AppColors.highlight;
         foreground = AppColors.ink;
-        border = null;
+        border = Border.all(color: AppColors.ink, width: 1.4);
         break;
       case AppButtonVariant.secondary:
         background = AppColors.ink;
         foreground = AppColors.paper;
-        border = null;
+        border = Border.all(color: AppColors.ink, width: 1.4);
         break;
       case AppButtonVariant.outline:
         background = Colors.transparent;
@@ -50,7 +50,7 @@ class AppButton extends StatelessWidget {
       case AppButtonVariant.danger:
         background = AppColors.no;
         foreground = AppColors.white;
-        border = null;
+        border = Border.all(color: AppColors.ink, width: 1.4);
         break;
     }
 
@@ -78,13 +78,13 @@ class AppButton extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: onPressed == null ? background.withOpacity(0.5) : background,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(4),
           border: border,
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(4),
             onTap: loading ? null : onPressed,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),

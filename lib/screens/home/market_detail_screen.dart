@@ -7,6 +7,7 @@ import '../../core/api/token_store.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/pill_chip.dart';
+import '../../core/widgets/section_header.dart';
 import '../../core/widgets/yes_no_bar.dart';
 import '../../models/market.dart';
 import '../../theme/app_colors.dart';
@@ -111,7 +112,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
           children: [
             if (market.imagePath != null && market.imagePath!.isNotEmpty) ...[
               ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(8),
                 child: Image.network(
                   market.imagePath!,
                   height: 180,
@@ -151,13 +152,13 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColors.white,
-                border: Border.all(color: AppColors.mist),
-                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.ink, width: 1.3),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Current odds', style: AppTextStyles.body(13, weight: FontWeight.w600, color: AppColors.slate)),
+                  Text('CURRENT ODDS', style: AppTextStyles.label(12, weight: FontWeight.w700, color: AppColors.slate)),
                   const SizedBox(height: 12),
                   YesNoBar(yesPct: market.yesPricePct, height: 14),
                   const SizedBox(height: 20),
@@ -184,21 +185,21 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
               ),
             ),
             const SizedBox(height: 28),
-            Text('Resolution rule', style: AppTextStyles.h3),
+            const SectionHeader(number: 2, title: 'Resolution rule'),
             const SizedBox(height: 8),
             Text(
               'Resolves YES or NO based on the official result at close. Disputes are settled against the sources below.',
               style: AppTextStyles.body(14, color: AppColors.slate, height: 1.5),
             ),
             const SizedBox(height: 20),
-            Text('Sources of truth', style: AppTextStyles.h3),
+            const SectionHeader(number: 3, title: 'Sources of truth'),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.white,
-                border: Border.all(color: AppColors.mist),
-                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.ink, width: 1.3),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
@@ -210,7 +211,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
               ),
             ),
             const SizedBox(height: 28),
-            Text('Recent activity', style: AppTextStyles.h3),
+            const SectionHeader(number: 4, title: 'Recent activity'),
             const SizedBox(height: 10),
             if (_loadingTrades)
               const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: AppColors.ink)))
@@ -219,8 +220,8 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: AppColors.white,
-                  border: Border.all(color: AppColors.mist),
-                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.ink, width: 1.3),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
                   child: Text('No trades yet — be the first to call it!', style: AppTextStyles.caption),
@@ -230,8 +231,8 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.white,
-                  border: Border.all(color: AppColors.mist),
-                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.ink, width: 1.3),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: ListView.separated(
                   shrinkWrap: true,
@@ -291,14 +292,18 @@ class _SideButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: color,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(6),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(6),
         onTap: onTap,
-        child: Padding(
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.ink, width: 1.4),
+            borderRadius: BorderRadius.circular(6),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Center(
-            child: Text(label, style: AppTextStyles.button.copyWith(color: AppColors.white)),
+            child: Text(label.toUpperCase(), style: AppTextStyles.button.copyWith(color: AppColors.white)),
           ),
         ),
       ),

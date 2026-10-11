@@ -24,7 +24,7 @@ class AppBottomNav extends StatelessWidget {
         height: 74,
         decoration: const BoxDecoration(
           color: AppColors.white,
-          border: Border(top: BorderSide(color: AppColors.mist)),
+          border: Border(top: BorderSide(color: AppColors.ink, width: 1.3)),
         ),
         child: Row(
           children: List.generate(_items.length, (index) {
@@ -32,16 +32,20 @@ class AppBottomNav extends StatelessWidget {
             final selected = index == currentIndex;
 
             if (item.icon == null) {
-              // Center "Create" button — a raised highlight pill.
+              // Center "Create" button — a boxy, bordered highlight square.
               return Expanded(
                 child: Center(
                   child: GestureDetector(
                     onTap: () => onTap(index),
                     child: Container(
-                      width: 52,
-                      height: 52,
-                      decoration: const BoxDecoration(color: AppColors.highlight, shape: BoxShape.circle),
-                      child: const Icon(Icons.add_rounded, color: AppColors.ink, size: 26),
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.highlight,
+                        border: Border.all(color: AppColors.ink, width: 1.4),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(Icons.add_rounded, color: AppColors.ink, size: 24),
                     ),
                   ),
                 ),
@@ -55,9 +59,18 @@ class AppBottomNav extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(item.icon, color: color, size: 24),
-                    const SizedBox(height: 4),
-                    Text(item.label, style: AppTextStyles.body(11, weight: FontWeight.w600, color: color)),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: selected ? Border.all(color: AppColors.ink, width: 1.3) : null,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(item.icon, color: color, size: 20),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(item.label.toUpperCase(), style: AppTextStyles.label(10, weight: FontWeight.w600, color: color)),
                   ],
                 ),
               ),

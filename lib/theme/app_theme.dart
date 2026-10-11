@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
+/// "Technical blueprint" theme: monospace type throughout, sharp/minimal
+/// corners instead of pills, thin ink borders standing in for shadows.
 class AppTheme {
   AppTheme._();
+
+  static const double radiusSm = 4; // buttons, chips, inputs
+  static const double radiusMd = 10; // cards
 
   static ThemeData get light {
     final base = ThemeData(
@@ -21,19 +26,20 @@ class AppTheme {
       ),
     );
 
-    final textTheme = GoogleFonts.ibmPlexSansTextTheme(base.textTheme).apply(
+    final textTheme = GoogleFonts.jetBrainsMonoTextTheme(base.textTheme).apply(
       bodyColor: AppColors.ink,
       displayColor: AppColors.ink,
     );
 
     return base.copyWith(
       textTheme: textTheme,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.paper,
         foregroundColor: AppColors.ink,
         elevation: 0,
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
+        titleTextStyle: GoogleFonts.jetBrainsMono(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.ink),
       ),
       dividerColor: AppColors.mist,
       splashFactory: InkRipple.splashFactory,
@@ -43,8 +49,8 @@ class AppTheme {
           foregroundColor: AppColors.paper,
           elevation: 0,
           minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-          textStyle: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
+          textStyle: GoogleFonts.jetBrainsMono(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -52,43 +58,43 @@ class AppTheme {
           foregroundColor: AppColors.ink,
           side: const BorderSide(color: AppColors.ink, width: 1.4),
           minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-          textStyle: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
+          textStyle: GoogleFonts.jetBrainsMono(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.ink,
-          textStyle: GoogleFonts.ibmPlexSans(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.jetBrainsMono(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        hintStyle: GoogleFonts.ibmPlexSans(color: AppColors.slate, fontSize: 15),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        hintStyle: GoogleFonts.jetBrainsMono(color: AppColors.slate, fontSize: 15),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.mist),
+          borderRadius: BorderRadius.circular(radiusSm),
+          borderSide: const BorderSide(color: AppColors.ink, width: 1.3),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.mist),
+          borderRadius: BorderRadius.circular(radiusSm),
+          borderSide: const BorderSide(color: AppColors.ink, width: 1.3),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.ink, width: 1.6),
+          borderRadius: BorderRadius.circular(radiusSm),
+          borderSide: const BorderSide(color: AppColors.ink, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(radiusSm),
           borderSide: const BorderSide(color: AppColors.no, width: 1.4),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.ink,
-        contentTextStyle: GoogleFonts.ibmPlexSans(color: AppColors.paper),
+        contentTextStyle: GoogleFonts.jetBrainsMono(color: AppColors.paper),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
       ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {

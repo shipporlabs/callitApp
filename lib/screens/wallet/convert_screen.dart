@@ -3,8 +3,6 @@ import '../../core/widgets/app_button.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 
-import '../../core/api/solana_service.dart';
-
 /// A simple SOL → USDC (or reverse) convert screen — the everyday "top up
 /// my trading balance" step most first-time traders need before backing
 /// a side. Wire this to a swap aggregator or Panta-adjacent liquidity.
@@ -19,23 +17,8 @@ class _ConvertScreenState extends State<ConvertScreen> {
   bool _solToUsdc = true;
   final _amountController = TextEditingController(text: '1.0');
   bool _converting = false;
-  double _rate = 150.0;
-  bool _loadingRate = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchRate();
-  }
-
-  Future<void> _fetchRate() async {
-    final rate = await SolanaService.instance.getSolUsdRate();
-    if (!mounted) return;
-    setState(() {
-      _rate = rate;
-      _loadingRate = false;
-    });
-  }
+  static const _rate = 178.40; // display-only placeholder rate
 
   double get _amount => double.tryParse(_amountController.text) ?? 0;
   double get _output => _solToUsdc ? _amount * _rate : _amount / _rate;

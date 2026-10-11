@@ -5,6 +5,7 @@ import '../../core/widgets/market_card.dart';
 import '../../core/widgets/pill_chip.dart';
 import '../../data/mock_markets.dart';
 import '../../models/market.dart';
+import '../../core/widgets/section_header.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'market_detail_screen.dart';
@@ -137,9 +138,10 @@ class _MarketsTabState extends State<MarketsTab> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
+                      style: AppTextStyles.body(14),
                       decoration: const InputDecoration(
-                        hintText: 'Search markets',
-                        prefixIcon: Icon(Icons.search, color: AppColors.slate),
+                        hintText: 'SEARCH MARKETS',
+                        prefixIcon: Icon(Icons.search, color: AppColors.ink),
                       ),
                     ),
                   ),
@@ -190,9 +192,18 @@ class _MarketsTabState extends State<MarketsTab> {
                     ),
                   ),
                 )
-              else
+              else ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 2),
+                    child: SectionHeader(
+                      number: 1,
+                      title: _category == null ? 'Trending Markets' : _label(_category!),
+                    ),
+                  ),
+                ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                   sliver: SliverList.separated(
                     itemCount: filtered.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 14),
@@ -207,6 +218,7 @@ class _MarketsTabState extends State<MarketsTab> {
                     },
                   ),
                 ),
+              ],
             ],
           ),
         ),

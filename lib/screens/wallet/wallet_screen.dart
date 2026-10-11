@@ -121,72 +121,71 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
         children: [
-          Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(24)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(provider, style: AppTextStyles.body(13, color: AppColors.inkMuted, weight: FontWeight.w600)),
-                    Row(
-                      children: [
-                        Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.yes, shape: BoxShape.circle)),
-                        const SizedBox(width: 6),
-                        Text(shortAddress, style: AppTextStyles.tabularNums(12, color: AppColors.inkMuted2)),
-                      ],
+          _TicketCard(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(provider.toUpperCase(), style: AppTextStyles.label(12, color: AppColors.inkMuted, weight: FontWeight.w600)),
+                  Row(
+                    children: [
+                      Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.yes, shape: BoxShape.circle)),
+                      const SizedBox(width: 6),
+                      Text(shortAddress, style: AppTextStyles.tabularNums(12, color: AppColors.inkMuted2)),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _TicketDivider(),
+              const SizedBox(height: 18),
+              Text('TOTAL BALANCE', style: AppTextStyles.label(12, color: AppColors.inkMuted)),
+              const SizedBox(height: 6),
+              Text(
+                _balances != null ? '\$${_balances!.totalUsdValue.toStringAsFixed(2)}' : '—',
+                style: AppTextStyles.display(36, color: AppColors.paper),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _balances != null
+                    ? '${_balances!.solBalance.toStringAsFixed(3)} SOL  •  ${_balances!.usdcBalance.toStringAsFixed(2)} USDC'
+                    : (_loading ? 'Fetching on-chain balance…' : '0.00 SOL  •  0.00 USDC'),
+                style: AppTextStyles.tabularNums(13, color: AppColors.inkMuted),
+              ),
+              const SizedBox(height: 18),
+              _TicketDivider(),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: _WalletAction(
+                      icon: Icons.add_card_rounded,
+                      label: 'Fund',
+                      onTap: () => Navigator.of(context)
+                          .push(MaterialPageRoute(builder: (_) => FundWalletScreen(walletAddress: address)))
+                          .then((val) {
+                        if (val == true) _loadPositions();
+                      }),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 22),
-                Text('Total balance', style: AppTextStyles.body(13, color: AppColors.inkMuted)),
-                const SizedBox(height: 6),
-                Text(
-                  _balances != null ? '\$${_balances!.totalUsdValue.toStringAsFixed(2)}' : '—',
-                  style: AppTextStyles.display(36, color: AppColors.paper),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _balances != null
-                      ? '${_balances!.solBalance.toStringAsFixed(3)} SOL  •  ${_balances!.usdcBalance.toStringAsFixed(2)} USDC'
-                      : (_loading ? 'Fetching on-chain balance…' : '0.00 SOL  •  0.00 USDC'),
-                  style: AppTextStyles.body(13, color: AppColors.inkMuted),
-                ),
-                const SizedBox(height: 22),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _WalletAction(
-                        icon: Icons.add_card_rounded,
-                        label: 'Fund',
-                        onTap: () => Navigator.of(context)
-                            .push(MaterialPageRoute(builder: (_) => FundWalletScreen(walletAddress: address)))
-                            .then((val) {
-                          if (val == true) _loadPositions();
-                        }),
-                      ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: _WalletAction(icon: Icons.call_received_rounded, label: 'Receive', onTap: () {})),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _WalletAction(
+                      icon: Icons.swap_horiz_rounded,
+                      label: 'Convert',
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConvertScreen())),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(child: _WalletAction(icon: Icons.call_received_rounded, label: 'Receive', onTap: () {})),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _WalletAction(
-                        icon: Icons.swap_horiz_rounded,
-                        label: 'Convert',
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConvertScreen())),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(child: _WalletAction(icon: Icons.ios_share_rounded, label: 'Send', onTap: () {})),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: _WalletAction(icon: Icons.ios_share_rounded, label: 'Send', onTap: () {})),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 28),
-          SectionHeader(title: 'Your positions', action: 'Refresh', onActionTap: _loadPositions),
+          SectionHeader(number: 1, title: 'Your positions', action: 'Refresh', onActionTap: _loadPositions),
           const SizedBox(height: 14),
           if (_loading)
             const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator(color: AppColors.ink)))
@@ -201,15 +200,15 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
                   child: _PositionTile(position: p),
                 )),
           const SizedBox(height: 28),
-          SectionHeader(title: 'Recent trades', action: 'Refresh', onActionTap: _loadPositions),
+          SectionHeader(number: 2, title: 'Recent trades', action: 'Refresh', onActionTap: _loadPositions),
           const SizedBox(height: 14),
           if (_tradeHistory.isEmpty)
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: AppColors.white,
-                border: Border.all(color: AppColors.mist),
-                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.ink, width: 1.3),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
                 child: Text('No trades recorded for this wallet yet.', style: AppTextStyles.caption),
@@ -226,8 +225,8 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.white,
-                    border: Border.all(color: AppColors.mist),
-                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppColors.ink, width: 1.3),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -263,6 +262,89 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
   }
 }
 
+/// The balance card drawn as a ticket stub: a solid Ink rectangle with
+/// circular notches punched into its left/right edges at each dashed
+/// divider, like a torn raffle ticket.
+class _TicketCard extends StatelessWidget {
+  const _TicketCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.ink,
+        border: Border.all(color: AppColors.ink, width: 1.4),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.all(22),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+    );
+  }
+}
+
+/// A dashed line with a small punched-out circle at each end — the
+/// "ticket stub" perforation, drawn in the page background color so it
+/// reads as a cutout against the card's Ink fill.
+class _TicketDivider extends StatelessWidget {
+  const _TicketDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 10,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          CustomPaint(
+            size: const Size(double.infinity, 1),
+            painter: _DashedLinePainter(color: AppColors.inkBorder),
+          ),
+          const Positioned(left: -22, child: _Notch()),
+          const Positioned(right: -22, child: _Notch()),
+        ],
+      ),
+    );
+  }
+}
+
+class _Notch extends StatelessWidget {
+  const _Notch();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: const BoxDecoration(color: AppColors.paper, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _DashedLinePainter extends CustomPainter {
+  _DashedLinePainter({required this.color});
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.3;
+    const dashWidth = 5.0;
+    const dashSpace = 4.0;
+    double x = 0;
+    while (x < size.width) {
+      canvas.drawLine(Offset(x, 0), Offset(x + dashWidth, 0), paint);
+      x += dashWidth + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedLinePainter oldDelegate) => oldDelegate.color != color;
+}
+
 class _PositionTile extends StatelessWidget {
   const _PositionTile({required this.position});
 
@@ -279,7 +361,7 @@ class _PositionTile extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.white, border: Border.all(color: AppColors.mist), borderRadius: BorderRadius.circular(18)),
+      decoration: BoxDecoration(color: AppColors.white, border: Border.all(color: AppColors.ink, width: 1.3), borderRadius: BorderRadius.circular(10)),
       child: Row(
         children: [
           PillChip(
@@ -341,9 +423,9 @@ class _WalletAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.inkSurface,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(6),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(6),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14),
