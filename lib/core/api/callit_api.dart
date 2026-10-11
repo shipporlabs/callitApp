@@ -235,6 +235,26 @@ class CallitApi {
     final data = await _c.post('/share-card', body: {'marketId': marketId});
     return (data as Map?)?.cast<String, dynamic>() ?? {};
   }
+
+  // ---- Funding (FossaPay) ----------------------------------------------
+
+  Future<Map<String, dynamic>> createFundingCheckout({
+    required double amountNgn,
+    required String walletAddress,
+    String? phoneNumber,
+  }) async {
+    final data = await _c.post('/funding/checkout', body: {
+      'amountNgn': amountNgn,
+      'walletAddress': walletAddress,
+      if (phoneNumber != null && phoneNumber.isNotEmpty) 'phoneNumber': phoneNumber,
+    });
+    return (data as Map?)?.cast<String, dynamic>() ?? {};
+  }
+
+  Future<Map<String, dynamic>> getFundingStatus(String reference) async {
+    final data = await _c.get('/funding/checkout/$reference');
+    return (data as Map?)?.cast<String, dynamic>() ?? {};
+  }
 }
 
 /// Convenience accessor — `callitApi.listMarkets(...)` reads a little

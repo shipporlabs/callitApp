@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'add_wallet_screen.dart';
 import 'convert_screen.dart';
+import 'fund_wallet_screen.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -156,8 +157,20 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
                 const SizedBox(height: 22),
                 Row(
                   children: [
+                    Expanded(
+                      child: _WalletAction(
+                        icon: Icons.add_card_rounded,
+                        label: 'Fund',
+                        onTap: () => Navigator.of(context)
+                            .push(MaterialPageRoute(builder: (_) => FundWalletScreen(walletAddress: address)))
+                            .then((val) {
+                          if (val == true) _loadPositions();
+                        }),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(child: _WalletAction(icon: Icons.call_received_rounded, label: 'Receive', onTap: () {})),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _WalletAction(
                         icon: Icons.swap_horiz_rounded,
@@ -165,7 +178,7 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
                         onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConvertScreen())),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(child: _WalletAction(icon: Icons.ios_share_rounded, label: 'Send', onTap: () {})),
                   ],
                 ),
