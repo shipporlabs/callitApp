@@ -6,10 +6,13 @@ import '../../core/widgets/pill_chip.dart';
 import '../../core/widgets/section_header.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import 'add_wallet_screen.dart';
 import 'convert_screen.dart';
 import 'fund_wallet_screen.dart';
 
+/// The portfolio screen: balance, open positions, and trade history for
+/// the account's FossaPay-provisioned wallet. Reached from a "Positions"
+/// quick action on the home screen — there's no "connect a wallet" step
+/// here, every account already has one.
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
 
@@ -22,20 +25,43 @@ class _WalletScreenState extends State<WalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.paper,
-      appBar: AppBar(title: Text('Wallet', style: AppTextStyles.h3)),
+      appBar: AppBar(title: Text('Portfolio', style: AppTextStyles.h3)),
       body: SafeArea(
         child: TokenStore.instance.hasWallet
             ? _ConnectedWallet(onDisconnected: () => setState(() {}))
-            : _DisconnectedWallet(onConnected: () => setState(() {})),
+            : _WalletNotReady(onRetry: () => setState(() {})),
       ),
     );
   }
 }
 
-class _DisconnectedWallet extends StatelessWidget {
-  const _DisconnectedWallet({required this.onConnected});
+/// Edge case only — a wallet that hasn't synced locally yet (first cold
+/// start before `fetchWalletAddress` resolves). There's nothing for the
+/// person to connect; this just offers to check again.
+class _WalletNotReady extends StatefulWidget {
+  const _WalletNotReady({required this.onRetry});
 
-  final VoidCallback onConnected;
+  final VoidCallback onRetry;
+
+  @override
+  State<_WalletNotReady> createState() => _WalletNotReadyState();
+}
+
+class _WalletNotReadyState extends State<_WalletNotReady> {
+  bool _checking = false;
+
+  Future<void> _retry() async {
+    setState(() => _checking = true);
+    try {
+      final address = await callitApi.fetchWalletAddress();
+      if (address != null) {
+        await TokenStore.instance.saveWallet(address: address, provider: 'FossaPay');
+      }
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _checking = false);
+    widget.onRetry();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,17 +73,17 @@ class _DisconnectedWallet extends StatelessWidget {
           children: [
             const Icon(Icons.account_balance_wallet_outlined, size: 48, color: AppColors.slate),
             const SizedBox(height: 16),
-            Text('No wallet connected', style: AppTextStyles.h3),
+            Text('Setting up your wallet', style: AppTextStyles.h3),
             const SizedBox(height: 8),
-            Text('Connect a wallet to trade and track positions.', style: AppTextStyles.subtitle, textAlign: TextAlign.center),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () async {
-                await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddWalletScreen()));
-                onConnected();
-              },
-              child: const Text('Connect wallet'),
+            Text(
+              'FossaPay provisions a wallet for every account — this usually only takes a moment.',
+              style: AppTextStyles.subtitle,
+              textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 20),
+            _checking
+                ? const CircularProgressIndicator(color: AppColors.ink)
+                : TextButton(onPressed: _retry, child: const Text('Try again')),
           ],
         ),
       ),

@@ -12,7 +12,6 @@ class AppBottomNav extends StatelessWidget {
     (icon: Icons.home_rounded, label: 'Home'),
     (icon: Icons.search_rounded, label: 'Markets'),
     (icon: null, label: 'Create'), // center action, styled differently
-    (icon: Icons.account_balance_wallet_rounded, label: 'Wallet'),
     (icon: Icons.person_rounded, label: 'Profile'),
   ];
 

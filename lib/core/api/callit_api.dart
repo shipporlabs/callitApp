@@ -36,6 +36,17 @@ class CallitApi {
     return (data as Map?)?.cast<String, dynamic>() ?? {};
   }
 
+  /// FossaPay provisions a Solana wallet automatically for every account —
+  /// there's no "connect a wallet" step in this app. Reads it off the
+  /// signed-in user's profile; call this right after sign-up/login (and
+  /// defensively on app start for an older cached session) and cache the
+  /// result in [TokenStore].
+  Future<String?> fetchWalletAddress() async {
+    final data = await me();
+    final address = data['walletAddress'] as String?;
+    return (address != null && address.isNotEmpty) ? address : null;
+  }
+
   // ---- Markets ---------------------------------------------------------
 
   /// Market catalog. [category]/[status] are the API's lowercase enum
@@ -58,12 +69,6 @@ class CallitApi {
 
   Future<List<dynamic>> getMarketTrades(String id) async {
     final data = await _c.get('/markets/$id/trades', auth: false);
-    if (data is List) return data;
-    return (data as Map?)?['items'] as List<dynamic>? ?? [];
-  }
-
-  Future<List<dynamic>> getWalletTrades(String wallet) async {
-    final data = await _c.get('/wallets/$wallet/trades', auth: false);
     if (data is List) return data;
     return (data as Map?)?['items'] as List<dynamic>? ?? [];
   }
@@ -236,24 +241,41 @@ class CallitApi {
     return (data as Map?)?.cast<String, dynamic>() ?? {};
   }
 
-  // ---- Funding (FossaPay) ----------------------------------------------
+  // ---- Wallet funding (FossaPay NGN → USDC) ---------------------------
+  //
+  // NOTE: no OpenAPI spec was supplied for these three endpoints — the
+  // paths, field names and response shapes below are inferred from how
+  // `fund_wallet_screen.dart` and `wallet_screen.dart` consume them.
+  // Verify these against the real FossaPay-backed Callit backend and
+  // adjust the path/field names here if they differ; everything else in
+  // the two screens is written to be tolerant of minor shape changes.
 
-  Future<Map<String, dynamic>> createFundingCheckout({
-    required double amountNgn,
-    required String walletAddress,
-    String? phoneNumber,
-  }) async {
+  /// Starts an NGN→USDC deposit: creates a FossaPay virtual/bank transfer
+  /// checkout for [amountNgn] that will credit [walletAddress] with USDC
+  /// once paid. Expected response fields: `reference`, `bankName`,
+  /// `accountNumber`, `accountName`, `amountPayableNgn` (or `amountNgn`).
+  Future<Map<String, dynamic>> createFundingCheckout({required double amountNgn, required String walletAddress}) async {
     final data = await _c.post('/funding/checkout', body: {
       'amountNgn': amountNgn,
       'walletAddress': walletAddress,
-      if (phoneNumber != null && phoneNumber.isNotEmpty) 'phoneNumber': phoneNumber,
     });
     return (data as Map?)?.cast<String, dynamic>() ?? {};
   }
 
+  /// Polls a funding checkout's status by its [reference]. Expected
+  /// response field: `status` (`'pending'` | `'completed'` | `'failed'`).
   Future<Map<String, dynamic>> getFundingStatus(String reference) async {
-    final data = await _c.get('/funding/checkout/$reference');
+    final data = await _c.get('/funding/status', query: {'reference': reference});
     return (data as Map?)?.cast<String, dynamic>() ?? {};
+  }
+
+  /// Trade history for a wallet (distinct from [positions], which is
+  /// current holdings) — used for the "Recent trades" list on the wallet
+  /// screen and on each market's "Recent activity" section.
+  Future<List<dynamic>> getWalletTrades(String wallet) async {
+    final data = await _c.get('/wallets/$wallet/trades');
+    if (data is List) return data;
+    return (data as Map?)?['items'] as List<dynamic>? ?? [];
   }
 }
 

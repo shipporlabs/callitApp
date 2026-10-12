@@ -6,8 +6,7 @@ import '../../core/widgets/app_button.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../auth/welcome_screen.dart';
-import '../community/communities_screen.dart';
-import '../wallet/add_wallet_screen.dart';
+import '../wallet/wallet_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -30,20 +29,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      try {
-        final me = await callitApi.me();
-        if (me.isNotEmpty && TokenStore.instance.token != null) {
-          await TokenStore.instance.saveSession(
-            token: TokenStore.instance.token!,
-            userId: me['id'] as String?,
-            userName: me['name'] as String?,
-            userEmail: me['email'] as String?,
-          );
-        }
-      } catch (_) {
-        // Fall back to stored session if /me is unreachable
-      }
-
       final result = await callitApi.myMarkets();
       if (!mounted) return;
       setState(() {
@@ -169,18 +154,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 24),
               _MenuItem(
                 icon: Icons.account_balance_wallet_outlined,
-                label: 'Wallet settings',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AddWalletScreen()),
-                ),
+                label: 'Portfolio & positions',
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WalletScreen())),
               ),
-              _MenuItem(
-                icon: Icons.groups_outlined,
-                label: 'Communities & Leaderboard',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CommunitiesScreen()),
-                ),
-              ),
+              _MenuItem(icon: Icons.groups_outlined, label: 'My communities', onTap: () {}),
               _MenuItem(icon: Icons.notifications_outlined, label: 'Notifications', onTap: () {}),
               _MenuItem(icon: Icons.help_outline_rounded, label: 'Help and support', onTap: () {}),
               _MenuItem(icon: Icons.description_outlined, label: 'Terms of use', onTap: () {}),

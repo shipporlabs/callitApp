@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/api/callit_api.dart';
 import '../../core/api/token_store.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../theme/app_colors.dart';
@@ -17,11 +18,23 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 1100), () {
+    Future.delayed(const Duration(milliseconds: 1100), () async {
       if (!mounted) return;
       // TokenStore is already loaded (see main.dart) — a returning,
       // signed-in user skips onboarding entirely.
       final loggedIn = TokenStore.instance.isAuthenticated;
+      // FossaPay's wallet is provisioned server-side at sign-up; this
+      // just covers a session that was signed in before the wallet
+      // existed locally (e.g. restored on a fresh install).
+      if (loggedIn && !TokenStore.instance.hasWallet) {
+        try {
+          final address = await callitApi.fetchWalletAddress();
+          if (address != null) {
+            await TokenStore.instance.saveWallet(address: address, provider: 'FossaPay');
+          }
+        } catch (_) {}
+      }
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => loggedIn ? const HomeScreen() : const OnboardingScreen()),
       );

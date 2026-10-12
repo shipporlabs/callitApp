@@ -5,7 +5,7 @@ import '../../core/api/token_store.dart';
 import '../../core/widgets/app_button.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../wallet/add_wallet_screen.dart';
+import '../home/home_screen.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
   const VerifyOtpScreen({super.key, required this.email});
@@ -34,9 +34,19 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         userName: user?['name'] as String?,
         userEmail: user?['email'] as String?,
       );
+      // FossaPay provisions the account's wallet automatically — fetch it
+      // now rather than making the person connect one. Best-effort: a
+      // failure here shouldn't block sign-up, the wallet gets picked up
+      // the next time something needs it.
+      try {
+        final address = await callitApi.fetchWalletAddress();
+        if (address != null) {
+          await TokenStore.instance.saveWallet(address: address, provider: 'FossaPay');
+        }
+      } catch (_) {}
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const AddWalletScreen(fromSignUp: true)),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
         (route) => false,
       );
     } on ApiException catch (e) {

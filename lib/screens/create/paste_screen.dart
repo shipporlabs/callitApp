@@ -6,15 +6,19 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'review_market_screen.dart';
 
-import '../../models/community.dart';
-
 /// Step 1 of Callit's core flow: paste a headline, a tweet, or a raw
 /// question. The next screen is where the AI-compiled draft is reviewed
 /// before anything is quoted against Panta.
+///
+/// [initialCommunity] is set when this is opened from a specific
+/// community (e.g. "New market" inside [CommunitiesScreen]) — the
+/// resulting market is then scoped to that community's own leaderboard
+/// rather than the public catalog. Null for the ordinary bottom-nav
+/// "Create" tab.
 class PasteScreen extends StatefulWidget {
   const PasteScreen({super.key, this.initialCommunity});
 
-  final Community? initialCommunity;
+  final String? initialCommunity;
 
   @override
   State<PasteScreen> createState() => _PasteScreenState();
@@ -37,11 +41,7 @@ class _PasteScreenState extends State<PasteScreen> {
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ReviewMarketScreen(
-            rawInput: _controller.text,
-            compiled: result,
-            initialCommunity: widget.initialCommunity,
-          ),
+          builder: (_) => ReviewMarketScreen(rawInput: _controller.text, compiled: result, communityId: widget.initialCommunity),
         ),
       );
     } on ApiException catch (e) {
@@ -50,12 +50,7 @@ class _PasteScreenState extends State<PasteScreen> {
       // Fall through so a slow/offline compiler doesn't block the demo —
       // the review screen has its own local fallback draft.
       Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ReviewMarketScreen(
-            rawInput: _controller.text,
-            initialCommunity: widget.initialCommunity,
-          ),
-        ),
+        MaterialPageRoute(builder: (_) => ReviewMarketScreen(rawInput: _controller.text, communityId: widget.initialCommunity)),
       );
     } finally {
       if (mounted) setState(() => _compiling = false);
@@ -88,6 +83,27 @@ class _PasteScreenState extends State<PasteScreen> {
                 'A headline, a tweet link, or your own question. Callit turns it into a live market.',
                 style: AppTextStyles.subtitle,
               ),
+              if (widget.initialCommunity != null) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.ink, width: 1.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.groups_outlined, size: 14, color: AppColors.ink),
+                        const SizedBox(width: 6),
+                        Text('Posting to this community', style: AppTextStyles.body(12, weight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Container(
                 decoration: BoxDecoration(

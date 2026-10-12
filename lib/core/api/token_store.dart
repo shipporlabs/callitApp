@@ -2,9 +2,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Everything the app persists about the signed-in session: the bearer
 /// JWT from `/auth/verify` or `/auth/login`, a little user info to paint
-/// the profile screen without a round trip, and the connected wallet's
-/// public key (Solana Mobile Wallet Adapter's job to fill in for real —
-/// see [AddWalletScreen]).
+/// the profile screen without a round trip, and the account's wallet
+/// public key. There's no user-facing "connect a wallet" step — FossaPay
+/// provisions a wallet automatically for every account, and the app just
+/// fetches it off the user's profile right after sign-up/login (see
+/// `CallitApi.fetchWalletAddress`).
 ///
 /// A single in-memory singleton backed by SharedPreferences, so every
 /// screen reads the same values and a cold start restores them via

@@ -8,11 +8,11 @@ import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/pill_chip.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/share_card.dart';
 import '../../core/widgets/yes_no_bar.dart';
 import '../../models/market.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../wallet/add_wallet_screen.dart';
 
 class MarketDetailScreen extends StatefulWidget {
   const MarketDetailScreen({super.key, required this.market});
@@ -58,28 +58,43 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
 
   bool _sharing = false;
 
+  /// Builds a shareable PnL-style image card for this market and opens
+  /// the system share sheet with it — the deep link from `POST
+  /// /share-card` is printed on the card when that call succeeds, and
+  /// the card still works (with a generic `callit.my/m/{id}` link) if it
+  /// doesn't, since the image itself doesn't depend on the API.
   Future<void> _shareMarket() async {
     if (_sharing) return;
     setState(() => _sharing = true);
+    String? shareUrl;
     try {
       final card = await callitApi.createShareCard(widget.market.id);
-      final shareUrl = card['deepLink'] as String? ?? card['imageUrl'] as String? ?? 'https://callit.my/market/${widget.market.id}';
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Share link ready: $shareUrl')));
+      shareUrl = card['deepLink'] as String? ?? card['imageUrl'] as String?;
     } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Couldn't prepare share card right now.")));
-    } finally {
-      if (mounted) setState(() => _sharing = false);
+      // Fall back to the card's own generic link — see showMarketShareSheet.
     }
+    if (!mounted) return;
+    setState(() => _sharing = false);
+    await showMarketShareSheet(context, market: _market, shareUrl: shareUrl);
   }
 
-  void _openTradeSheet(bool side) {
+  void _openTradeSheet(bool side) async {
+    // Every account has a FossaPay-provisioned wallet — this only fires
+    // if that hasn't synced locally yet (e.g. a very first cold start).
     if (!TokenStore.instance.hasWallet) {
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddWalletScreen())).then((_) {
-        if (TokenStore.instance.hasWallet && mounted) _openTradeSheet(side);
-      });
-      return;
+      try {
+        final address = await callitApi.fetchWalletAddress();
+        if (address != null) {
+          await TokenStore.instance.saveWallet(address: address, provider: 'FossaPay');
+        }
+      } catch (_) {}
+      if (!mounted) return;
+      if (!TokenStore.instance.hasWallet) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Still setting up your wallet — try again in a moment.")),
+        );
+        return;
+      }
     }
     showModalBottomSheet(
       context: context,
@@ -111,13 +126,18 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
           children: [
             if (market.imagePath != null && market.imagePath!.isNotEmpty) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+              Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxHeight: 340, minHeight: 140),
+                decoration: BoxDecoration(
+                  color: AppColors.mist.withOpacity(0.4),
+                  border: Border.all(color: AppColors.ink, width: 1.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                clipBehavior: Clip.antiAlias,
                 child: Image.network(
                   market.imagePath!,
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
@@ -311,12 +331,10 @@ class _SideButton extends StatelessWidget {
   }
 }
 
-/// Panta's real buy flow: quote → build → sign in wallet → broadcast →
-/// submit → verify. Every step here except the signature itself hits the
-/// live Callit API; the signature is a placeholder until a real Solana
-/// Mobile Wallet Adapter session is wired into [AddWalletScreen] (that's
-/// the one step a server proxy can never do for you — Panta is
-/// non-custodial by design).
+/// Panta's real buy flow: quote → build → sign → broadcast → submit →
+/// verify. Every step here except the signature itself hits the live
+/// Callit API; the signature is a placeholder until signing is wired
+/// into the account's FossaPay-provisioned wallet for real.
 class _TradeSheet extends StatefulWidget {
   const _TradeSheet({required this.market, required this.side});
 

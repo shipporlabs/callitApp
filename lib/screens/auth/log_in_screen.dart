@@ -37,6 +37,16 @@ class _LogInScreenState extends State<LogInScreen> {
         userName: user?['name'] as String?,
         userEmail: user?['email'] as String? ?? _emailController.text.trim(),
       );
+      // In case this is a fresh device/install without the wallet cached
+      // locally — the account's FossaPay wallet already exists server-side.
+      if (!TokenStore.instance.hasWallet) {
+        try {
+          final address = await callitApi.fetchWalletAddress();
+          if (address != null) {
+            await TokenStore.instance.saveWallet(address: address, provider: 'FossaPay');
+          }
+        } catch (_) {}
+      }
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomeScreen()),

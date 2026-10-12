@@ -9,10 +9,7 @@ import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/pill_chip.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../wallet/add_wallet_screen.dart';
 import 'market_created_screen.dart';
-
-import '../../models/community.dart';
 
 const _categories = ['Sports', 'Crypto', 'Politics', 'Entertainment', 'Finance', 'Science', 'World', 'Other'];
 
@@ -22,11 +19,15 @@ const _categories = ['Sports', 'Crypto', 'Politics', 'Entertainment', 'Finance',
 /// succeeded; when it's null (offline, or the compiler errored) this
 /// falls back to a locally-guessed draft so the flow still completes.
 class ReviewMarketScreen extends StatefulWidget {
-  const ReviewMarketScreen({super.key, required this.rawInput, this.compiled, this.initialCommunity});
+  const ReviewMarketScreen({super.key, required this.rawInput, this.compiled, this.communityId});
 
   final String rawInput;
   final Map<String, dynamic>? compiled;
-  final Community? initialCommunity;
+
+  /// Set when this market is being created from inside a community (see
+  /// [PasteScreen.initialCommunity]) — carried straight through to
+  /// `createQuote`'s own `communityId`.
+  final String? communityId;
 
   @override
   State<ReviewMarketScreen> createState() => _ReviewMarketScreenState();
@@ -36,23 +37,18 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
   late final TextEditingController _questionController;
   late final TextEditingController _ruleController;
   late final TextEditingController _sourceController;
-  late final TextEditingController _imageUrlController;
   late String _category;
   late int _startTime;
   late int _endTime;
   late int _resolutionTime;
   late String _marketType;
   late bool _eventInProgress;
-  Community? _community;
-  List<Community> _communities = [];
-  bool _uploadingImage = false;
   bool _ambiguous = false;
   bool _submitting = false;
 
   @override
   void initState() {
     super.initState();
-    _community = widget.initialCommunity;
     final draft = (widget.compiled?['draft'] as Map?)?.cast<String, dynamic>();
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
@@ -68,7 +64,6 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
     );
     final sources = (draft?['sourcesOfTruth'] as List?)?.cast<String>();
     _sourceController = TextEditingController(text: sources?.isNotEmpty == true ? sources!.first : 'https://www.cafonline.com');
-    _imageUrlController = TextEditingController(text: (draft?['imageUrl'] as String?) ?? '');
 
     final rawCategory = draft?['category'] as String?;
     _category = rawCategory != null && rawCategory.isNotEmpty
@@ -82,57 +77,30 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
     _marketType = (draft?['marketType'] as String?) ?? 'standard';
     _eventInProgress = (draft?['eventInProgress'] as bool?) ?? false;
     _ambiguous = (draft?['ambiguous'] as bool?) ?? false;
-
-    _loadCommunities();
-  }
-
-  Future<void> _loadCommunities() async {
-    try {
-      final items = await callitApi.communities();
-      if (!mounted) return;
-      setState(() {
-        _communities = items.map((e) => Community.fromJson((e as Map).cast<String, dynamic>())).toList();
-        if (_community != null) {
-          final match = _communities.where((c) => c.id == _community!.id).firstOrNull;
-          if (match != null) _community = match;
-        }
-      });
-    } catch (_) {}
-  }
-
-  Future<void> _requestImageUploadSignature() async {
-    setState(() => _uploadingImage = true);
-    try {
-      final sig = await callitApi.createImageUploadSignature();
-      final pubId = sig['publicId'] as String? ?? 'img_${DateTime.now().millisecondsSinceEpoch}';
-      final generatedUrl = 'https://res.cloudinary.com/callit/image/upload/$pubId.jpg';
-      setState(() {
-        _imageUrlController.text = generatedUrl;
-      });
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Panta image upload signature obtained! URL attached.')),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not obtain image upload signature.')),
-      );
-    } finally {
-      if (mounted) setState(() => _uploadingImage = false);
-    }
   }
 
   Future<void> _confirm() async {
+    // Every account has a FossaPay-provisioned wallet — this only fires
+    // if that hasn't synced locally yet.
     if (!TokenStore.instance.hasWallet) {
-      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddWalletScreen()));
-      if (!mounted || !TokenStore.instance.hasWallet) return;
+      try {
+        final address = await callitApi.fetchWalletAddress();
+        if (address != null) {
+          await TokenStore.instance.saveWallet(address: address, provider: 'FossaPay');
+        }
+      } catch (_) {}
+      if (!mounted) return;
+      if (!TokenStore.instance.hasWallet) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Still setting up your wallet — try again in a moment.")),
+        );
+        return;
+      }
     }
 
     setState(() => _submitting = true);
     Map<String, dynamic> quote;
     try {
-      final imgUrl = _imageUrlController.text.trim();
       quote = await callitApi.createQuote(
         wallet: TokenStore.instance.walletAddress!,
         question: _questionController.text.trim(),
@@ -142,10 +110,9 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
         startTime: _startTime,
         endTime: _endTime,
         resolutionTime: _resolutionTime,
-        imageUrl: imgUrl.isNotEmpty ? imgUrl : null,
-        communityId: _community?.id,
         marketType: _marketType,
         eventInProgress: _eventInProgress,
+        communityId: widget.communityId,
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -179,72 +146,7 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
     _questionController.dispose();
     _ruleController.dispose();
     _sourceController.dispose();
-    _imageUrlController.dispose();
     super.dispose();
-  }
-
-  void _pickCommunity() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-        decoration: const BoxDecoration(
-          color: AppColors.paper,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(color: AppColors.mist, borderRadius: BorderRadius.circular(999)),
-              ),
-            ),
-            Text('Select Community', style: AppTextStyles.h2),
-            const SizedBox(height: 6),
-            Text('Trading volume will be attributed to this community.', style: AppTextStyles.caption),
-            const SizedBox(height: 16),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.public_rounded, color: AppColors.ink),
-              title: Text('None (Global Market)', style: AppTextStyles.body(15, weight: FontWeight.w600)),
-              trailing: _community == null ? const Icon(Icons.check, color: AppColors.ink) : null,
-              onTap: () {
-                setState(() => _community = null);
-                Navigator.of(ctx).pop();
-              },
-            ),
-            const Divider(color: AppColors.mist),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: _communities.length,
-                separatorBuilder: (_, __) => const Divider(color: AppColors.mist, height: 1),
-                itemBuilder: (ctx, i) {
-                  final c = _communities[i];
-                  final isSelected = _community?.id == c.id;
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(c.name, style: AppTextStyles.body(15, weight: FontWeight.w600)),
-                    subtitle: Text('c/${c.slug} • ${c.marketCount} markets', style: AppTextStyles.caption),
-                    trailing: isSelected ? const Icon(Icons.check, color: AppColors.ink) : null,
-                    onTap: () {
-                      setState(() => _community = c);
-                      Navigator.of(ctx).pop();
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -304,71 +206,6 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
               label: 'Source of truth',
               controller: _sourceController,
               prefixIcon: Icons.link_rounded,
-            ),
-            const SizedBox(height: 18),
-            // Community selection
-            GestureDetector(
-              onTap: _pickCommunity,
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  border: Border.all(color: AppColors.mist),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.hub_outlined, size: 20, color: AppColors.slate),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Community (optional)', style: AppTextStyles.caption),
-                          const SizedBox(height: 2),
-                          Text(
-                            _community != null ? '${_community!.name} (c/${_community!.slug})' : 'Global (No community)',
-                            style: AppTextStyles.body(14, weight: FontWeight.w600),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right_rounded, color: AppColors.slate),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            // Market Image
-            AppTextField(
-              label: 'Image URL (optional)',
-              controller: _imageUrlController,
-              prefixIcon: Icons.image_outlined,
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton.icon(
-                  onPressed: _uploadingImage ? null : _requestImageUploadSignature,
-                  icon: _uploadingImage
-                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.upload_file_rounded, size: 16),
-                  label: Text(_uploadingImage ? 'Signing…' : 'Sign & Upload via Panta', style: AppTextStyles.body(13, weight: FontWeight.w600)),
-                ),
-                if (_imageUrlController.text.isNotEmpty)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      _imageUrlController.text,
-                      width: 36,
-                      height: 36,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, size: 20, color: AppColors.slate),
-                    ),
-                  ),
-              ],
             ),
             const SizedBox(height: 18),
             Row(

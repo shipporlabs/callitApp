@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/widgets/app_bottom_nav.dart';
 import '../create/paste_screen.dart';
 import '../profile/profile_screen.dart';
-import '../wallet/wallet_screen.dart';
+import 'home_dashboard.dart';
 import 'markets_tab.dart';
 
 /// The shell that owns bottom-nav state. Each tab is a plain widget, so
@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onNavTap(int index) {
     if (index == 2) {
       // Create tab opens as a full-screen flow rather than replacing the body.
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PasteScreen()));
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PasteScreen(initialCommunity: null,)));
       return;
     }
     setState(() => _index = index);
@@ -29,10 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      const MarketsTab(),
+      HomeDashboard(onSeeAllMarkets: () => _onNavTap(1)),
       const MarketsTab(searchMode: true),
       const SizedBox.shrink(), // placeholder for index 2 (Create), never shown
-      const WalletScreen(),
       const ProfileScreen(),
     ];
 
