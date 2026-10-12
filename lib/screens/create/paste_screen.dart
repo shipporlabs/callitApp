@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_button.dart';
+import '../../models/community.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'review_market_screen.dart';
@@ -11,14 +12,14 @@ import 'review_market_screen.dart';
 /// before anything is quoted against Panta.
 ///
 /// [initialCommunity] is set when this is opened from a specific
-/// community (e.g. "New market" inside [CommunitiesScreen]) — the
-/// resulting market is then scoped to that community's own leaderboard
-/// rather than the public catalog. Null for the ordinary bottom-nav
-/// "Create" tab.
+/// community (e.g. "New market" inside [CommunitiesScreen] or
+/// [CommunityDetailScreen]) — the resulting market is then scoped to
+/// that community's own leaderboard rather than the public catalog.
+/// Null for the ordinary bottom-nav "Create" tab.
 class PasteScreen extends StatefulWidget {
   const PasteScreen({super.key, this.initialCommunity});
 
-  final String? initialCommunity;
+  final Community? initialCommunity;
 
   @override
   State<PasteScreen> createState() => _PasteScreenState();
@@ -41,7 +42,7 @@ class _PasteScreenState extends State<PasteScreen> {
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ReviewMarketScreen(rawInput: _controller.text, compiled: result, communityId: widget.initialCommunity),
+          builder: (_) => ReviewMarketScreen(rawInput: _controller.text, compiled: result, communityId: widget.initialCommunity?.id),
         ),
       );
     } on ApiException catch (e) {
@@ -50,7 +51,7 @@ class _PasteScreenState extends State<PasteScreen> {
       // Fall through so a slow/offline compiler doesn't block the demo —
       // the review screen has its own local fallback draft.
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ReviewMarketScreen(rawInput: _controller.text, communityId: widget.initialCommunity)),
+        MaterialPageRoute(builder: (_) => ReviewMarketScreen(rawInput: _controller.text, communityId: widget.initialCommunity?.id)),
       );
     } finally {
       if (mounted) setState(() => _compiling = false);
@@ -98,7 +99,7 @@ class _PasteScreenState extends State<PasteScreen> {
                       children: [
                         const Icon(Icons.groups_outlined, size: 14, color: AppColors.ink),
                         const SizedBox(width: 6),
-                        Text('Posting to this community', style: AppTextStyles.body(12, weight: FontWeight.w600)),
+                        Text('Posting to ${widget.initialCommunity!.name}', style: AppTextStyles.body(12, weight: FontWeight.w600)),
                       ],
                     ),
                   ),

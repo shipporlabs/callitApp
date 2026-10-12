@@ -3,9 +3,11 @@ import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/pill_chip.dart';
 import '../../core/widgets/section_header.dart';
+import '../../models/community.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../create/paste_screen.dart';
+import 'community_detail_screen.dart';
 
 /// Communities & leaderboard — lists the communities a user can trade
 /// under (from `GET /communities`) with a simple rank-by-volume
@@ -19,7 +21,7 @@ class CommunitiesScreen extends StatefulWidget {
 }
 
 class _CommunitiesScreenState extends State<CommunitiesScreen> {
-  List<Map<String, dynamic>> _communities = [];
+  List<Community> _communities = [];
   bool _loading = true;
 
   @override
@@ -34,8 +36,8 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
       final items = await callitApi.communities();
       if (!mounted) return;
       setState(() {
-        _communities = items.whereType<Map<String, dynamic>>().toList()
-          ..sort((a, b) => (_volume(b)).compareTo(_volume(a)));
+        _communities = items.whereType<Map<String, dynamic>>().map(Community.fromJson).toList()
+          ..sort((a, b) => b.volumeUsdc.compareTo(a.volumeUsdc));
         _loading = false;
       });
     } catch (_) {
@@ -45,11 +47,6 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
         _loading = false;
       });
     }
-  }
-
-  double _volume(Map<String, dynamic> c) {
-    final v = c['volumeUsdc'] ?? c['volume'] ?? c['totalVolume'];
-    return v is num ? v.toDouble() : 0;
   }
 
   Future<void> _createCommunity() async {
@@ -130,60 +127,60 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                         ..._communities.asMap().entries.map((entry) {
                           final rank = entry.key + 1;
                           final c = entry.value;
-                          final id = c['id']?.toString() ?? c['communityId']?.toString();
-                          final name = c['name']?.toString() ?? 'Community';
-                          final members = c['memberCount'] ?? c['members'];
-                          final volume = _volume(c);
-                          final initials = name.isNotEmpty ? name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase() : '?';
+                          final initials = c.name.isNotEmpty ? c.name.substring(0, c.name.length >= 2 ? 2 : 1).toUpperCase() : '?';
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.white,
-                                border: Border.all(color: AppColors.mist),
+                            child: Material(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              child: InkWell(
                                 borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 28,
-                                    child: Text(
-                                      '#$rank',
-                                      style: AppTextStyles.tabularNums(14, color: AppColors.slate),
-                                    ),
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (_) => CommunityDetailScreen(community: c)),
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: AppColors.mist),
+                                    borderRadius: BorderRadius.circular(18),
                                   ),
-                                  AppAvatar(initials: initials, size: 36),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(name, style: AppTextStyles.body(15, weight: FontWeight.w700)),
-                                        if (members != null) ...[
-                                          const SizedBox(height: 2),
-                                          Text('$members members', style: AppTextStyles.caption),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  if (volume > 0) ...[
-                                    PillChip(
-                                      label: '\$${volume.toStringAsFixed(0)}',
-                                      background: AppColors.mist,
-                                      dense: true,
-                                    ),
-                                    const SizedBox(width: 8),
-                                  ],
-                                  if (id != null)
-                                    IconButton(
-                                      tooltip: 'New market in $name',
-                                      onPressed: () => Navigator.of(context).push(
-                                        MaterialPageRoute(builder: (_) => PasteScreen(initialCommunity: id)),
+                                  child: Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 28,
+                                        child: Text(
+                                          '#$rank',
+                                          style: AppTextStyles.tabularNums(14, color: AppColors.slate),
+                                        ),
                                       ),
-                                      icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.ink, size: 22),
-                                    ),
-                                ],
+                                      AppAvatar(initials: initials, size: 36),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(c.name, style: AppTextStyles.body(15, weight: FontWeight.w700)),
+                                            if (c.memberCount != null) ...[
+                                              const SizedBox(height: 2),
+                                              Text('${c.memberCount} members', style: AppTextStyles.caption),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      if (c.volumeUsdc > 0) ...[
+                                        PillChip(label: c.volumeLabel, background: AppColors.mist, dense: true),
+                                        const SizedBox(width: 8),
+                                      ],
+                                      IconButton(
+                                        tooltip: 'New market in ${c.name}',
+                                        onPressed: () => Navigator.of(context).push(
+                                          MaterialPageRoute(builder: (_) => PasteScreen(initialCommunity: c)),
+                                        ),
+                                        icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.ink, size: 22),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           );

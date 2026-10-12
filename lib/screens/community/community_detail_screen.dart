@@ -4,6 +4,7 @@ import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/market_card.dart';
 import '../../core/widgets/pill_chip.dart';
+import '../../core/widgets/section_header.dart';
 import '../../models/community.dart';
 import '../../models/market.dart';
 import '../../theme/app_colors.dart';
@@ -56,10 +57,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             loadedMarkets.add(Market.fromApi(mJson));
           } catch (_) {
             // If individual market fetch fails, construct a minimal item
+            final rawCategory = mMeta['category']?.toString() ?? 'other';
             loadedMarkets.add(Market(
               id: mId,
               question: 'Market #$mId',
-              category: (mMeta['category']?.toString() ?? 'other').toUpperCase(),
+              category: rawCategory.isEmpty ? 'Other' : rawCategory[0].toUpperCase() + rawCategory.substring(1),
               yesPricePct: 50.0,
               resolvesLabel: 'Active',
             ));
@@ -105,8 +107,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppColors.white,
-                  border: Border.all(color: AppColors.mist),
-                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.ink, width: 1.3),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,7 +124,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                         ),
                         PillChip(
                           label: 'c/${_community.slug}',
-                          background: AppColors.highlight.withOpacity(0.3),
+                          background: AppColors.highlight,
                           foreground: AppColors.ink,
                         ),
                       ],
@@ -149,8 +151,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      'Attribution ID: ${_community.attributionId}',
-                      style: AppTextStyles.caption,
+                      'ATTRIBUTION ID: ${_community.attributionId}',
+                      style: AppTextStyles.label(11, color: AppColors.slate),
                     ),
                   ],
                 ),
@@ -168,11 +170,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 },
               ),
               const SizedBox(height: 28),
-              Text(
-                'Community Markets',
-                style: AppTextStyles.display(18, weight: FontWeight.w700),
-              ),
-              const SizedBox(height: 12),
+              const SectionHeader(number: 1, title: 'Community markets'),
+              const SizedBox(height: 14),
               if (_loading)
                 const Center(
                   child: Padding(
@@ -198,8 +197,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
                   decoration: BoxDecoration(
                     color: AppColors.white,
-                    border: Border.all(color: AppColors.mist),
-                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.ink, width: 1.3),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
                     child: Column(
@@ -243,8 +242,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.paper,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.mist),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.ink, width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
