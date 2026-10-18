@@ -7,6 +7,7 @@ import '../../core/widgets/section_header.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'convert_screen.dart';
+import 'deposit_selection_sheet.dart';
 import 'fund_wallet_screen.dart';
 
 /// The portfolio screen: balance, open positions, and trade history for
@@ -187,15 +188,25 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
                     child: _WalletAction(
                       icon: Icons.add_card_rounded,
                       label: 'Fund',
-                      onTap: () => Navigator.of(context)
-                          .push(MaterialPageRoute(builder: (_) => FundWalletScreen(walletAddress: address)))
-                          .then((val) {
-                        if (val == true) _loadPositions();
-                      }),
+                      onTap: () => showDepositSelectionSheet(
+                        context,
+                        walletAddress: address,
+                        onFunded: _loadPositions,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(child: _WalletAction(icon: Icons.call_received_rounded, label: 'Receive', onTap: () {})),
+                  Expanded(
+                    child: _WalletAction(
+                      icon: Icons.call_received_rounded,
+                      label: 'Receive',
+                      onTap: () => showDepositSelectionSheet(
+                        context,
+                        walletAddress: address,
+                        onFunded: _loadPositions,
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: _WalletAction(

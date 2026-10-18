@@ -127,6 +127,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                         ..._communities.asMap().entries.map((entry) {
                           final rank = entry.key + 1;
                           final c = entry.value;
+                          if (c == null) return const SizedBox.shrink();
                           final initials = c.name.isNotEmpty ? c.name.substring(0, c.name.length >= 2 ? 2 : 1).toUpperCase() : '?';
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),

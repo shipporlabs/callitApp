@@ -10,6 +10,9 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'market_detail_screen.dart';
 import '../community/communities_screen.dart';
+import '../../core/api/solana_service.dart';
+import '../../core/api/token_store.dart';
+import '../wallet/deposit_selection_sheet.dart';
 
 class MarketsTab extends StatefulWidget {
   const MarketsTab({super.key, this.searchMode = false});
@@ -27,12 +30,23 @@ class _MarketsTabState extends State<MarketsTab> {
 
   List<Market> _markets = [];
   bool _loading = true;
+  SolanaBalances? _balances;
 
   @override
   void initState() {
     super.initState();
     _loadCategories();
     _loadMarkets();
+    _loadBalance();
+  }
+
+  Future<void> _loadBalance() async {
+    final wallet = TokenStore.instance.walletAddress;
+    if (wallet == null) return;
+    try {
+      final bal = await SolanaService.instance.getBalances(wallet);
+      if (mounted) setState(() => _balances = bal);
+    } catch (_) {}
   }
 
   Future<void> _loadCategories() async {
@@ -94,7 +108,12 @@ class _MarketsTabState extends State<MarketsTab> {
       backgroundColor: AppColors.paper,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadMarkets,
+          onRefresh: () async {
+            await Future.wait([
+              _loadMarkets(),
+              _loadBalance(),
+            ]);
+          },
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -131,6 +150,60 @@ class _MarketsTabState extends State<MarketsTab> {
                   ),
                 ),
               ),
+              if (!widget.searchMode)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.ink,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Wallet Balance',
+                                style: AppTextStyles.body(12, color: AppColors.inkMuted, weight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _balances != null
+                                    ? '\$${_balances!.totalUsdValue.toStringAsFixed(2)}'
+                                    : (TokenStore.instance.hasWallet ? 'Fetching…' : '\$0.00'),
+                                style: AppTextStyles.display(22, color: AppColors.paper),
+                              ),
+                            ],
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              final wallet = TokenStore.instance.walletAddress ?? '';
+                              showDepositSelectionSheet(
+                                context,
+                                walletAddress: wallet,
+                                onFunded: _loadBalance,
+                              );
+                            },
+                            icon: const Icon(Icons.add_card_rounded, size: 16),
+                            label: const Text('Fund / Deposit'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.highlight,
+                              foregroundColor: AppColors.ink,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              textStyle: AppTextStyles.body(13, weight: FontWeight.w700),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               if (widget.searchMode)
                 SliverToBoxAdapter(
                   child: Padding(

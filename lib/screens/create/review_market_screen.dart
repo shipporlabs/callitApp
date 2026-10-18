@@ -13,6 +13,18 @@ import 'market_created_screen.dart';
 
 const _categories = ['Sports', 'Crypto', 'Politics', 'Entertainment', 'Finance', 'Science', 'World', 'Other'];
 
+const Map<String, String> defaultCategoryImages = {
+  'Crypto': 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=1200',
+  'Sports': 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200',
+  'Politics': 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=1200',
+  'Finance': 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200',
+  'Tech': 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200',
+  'Entertainment': 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200',
+  'Science': 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=1200',
+  'World': 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=1200',
+  'Other': 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=1200',
+};
+
 /// Step 2: the AI-compiled draft, editable before anything touches Panta.
 /// [compiled] is `POST /ai/compile`'s response (draft + start/end/
 /// resolution timestamps) when the compiler call in `PasteScreen`
@@ -45,6 +57,7 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
   late bool _eventInProgress;
   bool _ambiguous = false;
   bool _submitting = false;
+  bool _showImageEditor = false;
 
   @override
   void initState() {
@@ -70,6 +83,13 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
         ? rawCategory[0].toUpperCase() + rawCategory.substring(1)
         : 'Sports';
     if (!_categories.contains(_category)) _category = 'Sports';
+
+    final initialImg = (draft?['imageUrl'] as String?)?.trim();
+    _imageUrlController = TextEditingController(
+      text: (initialImg != null && initialImg.isNotEmpty)
+          ? initialImg
+          : (defaultCategoryImages[_category] ?? defaultCategoryImages['Crypto']!),
+    );
 
     _startTime = (widget.compiled?['startTime'] as int?) ?? now + 3600;
     _endTime = (widget.compiled?['endTime'] as int?) ?? now + 3600 * 6;
@@ -101,6 +121,10 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
     setState(() => _submitting = true);
     Map<String, dynamic> quote;
     try {
+      final rawImg = _imageUrlController.text.trim();
+      final finalImageUrl = rawImg.isNotEmpty
+          ? rawImg
+          : (defaultCategoryImages[_category] ?? defaultCategoryImages['Crypto']!);
       quote = await callitApi.createQuote(
         wallet: TokenStore.instance.walletAddress!,
         question: _questionController.text.trim(),
@@ -110,9 +134,10 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
         startTime: _startTime,
         endTime: _endTime,
         resolutionTime: _resolutionTime,
+        imageUrl: finalImageUrl,
+        communityId: _community?.id,
         marketType: _marketType,
         eventInProgress: _eventInProgress,
-        communityId: widget.communityId,
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -190,7 +215,16 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
               children: _categories.map((c) {
                 final selected = c == _category;
                 return GestureDetector(
-                  onTap: () => setState(() => _category = c),
+                  onTap: () {
+                    setState(() {
+                      final oldFallback = defaultCategoryImages[_category];
+                      _category = c;
+                      final currentText = _imageUrlController.text.trim();
+                      if (currentText.isEmpty || currentText == oldFallback) {
+                        _imageUrlController.text = defaultCategoryImages[c] ?? defaultCategoryImages['Crypto']!;
+                      }
+                    });
+                  },
                   child: PillChip(
                     label: c,
                     background: selected ? AppColors.ink : AppColors.mist,
@@ -207,6 +241,144 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
               controller: _sourceController,
               prefixIcon: Icons.link_rounded,
             ),
+            const SizedBox(height: 18),
+            // Community selection
+            GestureDetector(
+              onTap: _pickCommunity,
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  border: Border.all(color: AppColors.mist),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.hub_outlined, size: 20, color: AppColors.slate),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Community (optional)', style: AppTextStyles.caption),
+                          const SizedBox(height: 2),
+                          Text(
+                            _community != null ? '${_community!.name} (c/${_community!.slug})' : 'Global (No community)',
+                            style: AppTextStyles.body(14, weight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded, color: AppColors.slate),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            // Market Image Banner Preview Card
+            Text('Market banner', style: AppTextStyles.body(14, weight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Container(
+              height: 140,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: AppColors.mist,
+                image: DecorationImage(
+                  image: NetworkImage(
+                    _imageUrlController.text.trim().isNotEmpty
+                        ? _imageUrlController.text.trim()
+                        : (defaultCategoryImages[_category] ?? defaultCategoryImages['Crypto']!),
+                  ),
+                  fit: BoxFit.cover,
+                  onError: (_, __) {},
+                ),
+              ),
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.1),
+                          Colors.black.withOpacity(0.65),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.image_rounded, size: 14, color: AppColors.paper),
+                          const SizedBox(width: 5),
+                          Text('Category Banner', style: AppTextStyles.caption.copyWith(color: AppColors.paper, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 12,
+                    right: 12,
+                    child: ElevatedButton.icon(
+                      onPressed: () => setState(() => _showImageEditor = !_showImageEditor),
+                      icon: Icon(_showImageEditor ? Icons.check_rounded : Icons.edit_rounded, size: 14),
+                      label: Text(_showImageEditor ? 'Done' : 'Edit / Upload Image', style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w700)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.paper,
+                        foregroundColor: AppColors.ink,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_showImageEditor) ...[
+              const SizedBox(height: 12),
+              AppTextField(
+                label: 'Custom Image URL',
+                controller: _imageUrlController,
+                prefixIcon: Icons.link_rounded,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton.icon(
+                    onPressed: _uploadingImage ? null : _requestImageUploadSignature,
+                    icon: _uploadingImage
+                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.upload_file_rounded, size: 16),
+                    label: Text(_uploadingImage ? 'Signing…' : 'Sign & Upload via Panta', style: AppTextStyles.body(13, weight: FontWeight.w600)),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _imageUrlController.text = defaultCategoryImages[_category] ?? defaultCategoryImages['Crypto']!;
+                      });
+                    },
+                    child: Text('Reset to default', style: AppTextStyles.caption.copyWith(color: AppColors.slate)),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 18),
             Row(
               children: [

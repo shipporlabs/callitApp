@@ -10,6 +10,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../community/communities_screen.dart';
 import '../wallet/convert_screen.dart';
+import '../wallet/deposit_selection_sheet.dart';
 import '../wallet/fund_wallet_screen.dart';
 import '../wallet/wallet_screen.dart';
 import 'market_detail_screen.dart';
@@ -118,6 +119,14 @@ class _HomeDashboardState extends State<HomeDashboard> {
                 hidden: _hideBalance,
                 onToggleHidden: () => setState(() => _hideBalance = !_hideBalance),
                 onTapDetails: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WalletScreen())),
+                onDeposit: () {
+                  final address = TokenStore.instance.walletAddress ?? '';
+                  showDepositSelectionSheet(
+                    context,
+                    walletAddress: address,
+                    onFunded: _loadBalance,
+                  );
+                },
               ),
               const SizedBox(height: 24),
               Text('QUICK ACTIONS', style: AppTextStyles.label(12, color: AppColors.slate)),
@@ -128,13 +137,13 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     child: _QuickAction(
                       icon: Icons.add_card_rounded,
                       label: 'Fund',
-                      onTap: () async {
-                        final address = TokenStore.instance.walletAddress;
-                        if (address == null) return;
-                        final changed = await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => FundWalletScreen(walletAddress: address)),
+                      onTap: () {
+                        final address = TokenStore.instance.walletAddress ?? '';
+                        showDepositSelectionSheet(
+                          context,
+                          walletAddress: address,
+                          onFunded: _loadBalance,
                         );
-                        if (changed == true) _loadBalance();
                       },
                     ),
                   ),
@@ -204,6 +213,7 @@ class _BalanceCard extends StatelessWidget {
     required this.hidden,
     required this.onToggleHidden,
     required this.onTapDetails,
+    this.onDeposit,
   });
 
   final SolanaBalances? balances;
@@ -211,6 +221,7 @@ class _BalanceCard extends StatelessWidget {
   final bool hidden;
   final VoidCallback onToggleHidden;
   final VoidCallback onTapDetails;
+  final VoidCallback? onDeposit;
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +256,33 @@ class _BalanceCard extends StatelessWidget {
                   Text('AVAILABLE BALANCE', style: AppTextStyles.label(11.5, color: AppColors.slate)),
                 ],
               ),
-              _IconBadgeButton(icon: Icons.arrow_outward_rounded, onTap: onTapDetails, filled: true),
+              Row(
+                children: [
+                  if (onDeposit != null) ...[
+                    GestureDetector(
+                      onTap: onDeposit,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppColors.highlight,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: AppColors.ink, width: 1.2),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.add_rounded, size: 14, color: AppColors.ink),
+                            const SizedBox(width: 4),
+                            Text('DEPOSIT', style: AppTextStyles.label(10.5, color: AppColors.ink, weight: FontWeight.w800)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  _IconBadgeButton(icon: Icons.arrow_outward_rounded, onTap: onTapDetails, filled: true),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 18),
