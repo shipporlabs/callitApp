@@ -1,3 +1,4 @@
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -55,6 +56,9 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
   late int _resolutionTime;
   late String _marketType;
   late bool _eventInProgress;
+  late final TextEditingController _imageUrlController;
+  String? _selectedCommunityId;
+  bool _uploadingImage = false;
   bool _ambiguous = false;
   bool _submitting = false;
   bool _showImageEditor = false;
@@ -97,6 +101,7 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
     _marketType = (draft?['marketType'] as String?) ?? 'standard';
     _eventInProgress = (draft?['eventInProgress'] as bool?) ?? false;
     _ambiguous = (draft?['ambiguous'] as bool?) ?? false;
+    _selectedCommunityId = widget.communityId;
   }
 
   Future<void> _confirm() async {
@@ -135,7 +140,7 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
         endTime: _endTime,
         resolutionTime: _resolutionTime,
         imageUrl: finalImageUrl,
-        communityId: _community?.id,
+        communityId: _selectedCommunityId,
         marketType: _marketType,
         eventInProgress: _eventInProgress,
       );
@@ -171,6 +176,7 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
     _questionController.dispose();
     _ruleController.dispose();
     _sourceController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -263,7 +269,9 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
                           Text('Community (optional)', style: AppTextStyles.caption),
                           const SizedBox(height: 2),
                           Text(
-                            _community != null ? '${_community!.name} (c/${_community!.slug})' : 'Global (No community)',
+                            _selectedCommunityId != null
+                                ? 'Community market (${_selectedCommunityId!})'
+                                : 'Global (No community)',
                             style: AppTextStyles.body(14, weight: FontWeight.w600),
                           ),
                         ],
@@ -416,6 +424,58 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
             const SizedBox(height: 28),
             AppButton(label: 'Continue', loading: _submitting, onPressed: _confirm),
           ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickCommunity() async {
+    final currentCommunityId = widget.communityId;
+
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Market community'),
+        content: Text(
+          currentCommunityId == null
+              ? 'This market will be created globally. Community discovery is not connected on this screen yet.'
+              : 'This market was opened from community ID: $currentCommunityId. You can keep it in that community or create it globally.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('cancel'),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('global'),
+            child: const Text('Global market'),
+          ),
+          if (currentCommunityId != null)
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop('community'),
+              child: const Text('Keep community'),
+            ),
+        ],
+      ),
+    );
+
+    if (!mounted || choice == null || choice == 'cancel') return;
+
+    setState(() {
+      _selectedCommunityId =
+          choice == 'community' ? currentCommunityId : null;
+    });
+  }
+
+  Future<void> _requestImageUploadSignature() async {
+    if (!mounted) return;
+
+    // The supplied file does not include a Panta upload-signature endpoint
+    // or its request/response schema, so do not pretend an upload succeeded.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Panta image upload is not connected yet. Paste a publicly accessible image URL instead.',
         ),
       ),
     );
