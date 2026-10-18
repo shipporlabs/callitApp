@@ -11,8 +11,9 @@ class CryptoDepositScreen extends StatelessWidget {
 
   final String walletAddress;
 
-  void _copyAddress(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: walletAddress));
+  void _copyAddress(BuildContext context, String address) {
+    if (address.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: address));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Solana address copied to clipboard!'),
@@ -162,7 +163,7 @@ class CryptoDepositScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   InkWell(
-                    onTap: () => _copyAddress(context),
+                    onTap: () => _copyAddress(context, address),
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -187,7 +188,7 @@ class CryptoDepositScreen extends StatelessWidget {
 
             AppButton(
               label: 'Copy Address',
-              onPressed: () => _copyAddress(context),
+              onPressed: () => _copyAddress(context, address),
             ),
           ],
         ),
