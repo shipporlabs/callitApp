@@ -1,3 +1,4 @@
+import 'package:callit_app/screens/wallet/add_wallet_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/api/token_store.dart';
