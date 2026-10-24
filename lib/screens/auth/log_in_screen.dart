@@ -38,12 +38,12 @@ class _LogInScreenState extends State<LogInScreen> {
         userEmail: user?['email'] as String? ?? _emailController.text.trim(),
       );
       // In case this is a fresh device/install without the wallet cached
-      // locally — the account's FossaPay wallet already exists server-side.
+      // locally — the account's wallet already exists server-side.
       if (!TokenStore.instance.hasWallet) {
         try {
-          final address = await callitApi.fetchWalletAddress();
-          if (address != null) {
-            await TokenStore.instance.saveWallet(address: address, provider: 'FossaPay');
+          final address = (user?['walletAddress'] as String?) ?? await callitApi.fetchWalletAddress();
+          if (address != null && address.isNotEmpty) {
+            await TokenStore.instance.saveWallet(address: address, provider: 'Solana');
           }
         } catch (_) {}
       }

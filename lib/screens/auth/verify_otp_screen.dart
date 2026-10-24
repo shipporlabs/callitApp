@@ -34,14 +34,14 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         userName: user?['name'] as String?,
         userEmail: user?['email'] as String?,
       );
-      // FossaPay provisions the account's wallet automatically — fetch it
+      // The account's Solana wallet is provisioned automatically — fetch it
       // now rather than making the person connect one. Best-effort: a
       // failure here shouldn't block sign-up, the wallet gets picked up
       // the next time something needs it.
       try {
-        final address = await callitApi.fetchWalletAddress();
-        if (address != null) {
-          await TokenStore.instance.saveWallet(address: address, provider: 'FossaPay');
+        final address = (user?['walletAddress'] as String?) ?? await callitApi.fetchWalletAddress();
+        if (address != null && address.isNotEmpty) {
+          await TokenStore.instance.saveWallet(address: address, provider: 'Solana');
         }
       } catch (_) {}
       if (!mounted) return;

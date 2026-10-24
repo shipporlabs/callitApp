@@ -84,7 +84,23 @@ class _WalletNotReadyState extends State<_WalletNotReady> {
             const SizedBox(height: 20),
             _checking
                 ? const CircularProgressIndicator(color: AppColors.ink)
-                : TextButton(onPressed: _retry, child: const Text('Try again')),
+                : Column(
+                    children: [
+                      TextButton(onPressed: _retry, child: const Text('Try again')),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        onPressed: () async {
+                          final connected = await Navigator.of(context).push<bool>(
+                            MaterialPageRoute(builder: (_) => const AddWalletScreen()),
+                          );
+                          if (connected == true) {
+                            widget.onRetry();
+                          }
+                        },
+                        child: const Text('Connect or Import Solana Wallet'),
+                      ),
+                    ],
+                  ),
           ],
         ),
       ),
