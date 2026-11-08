@@ -34,6 +34,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
 
   List<Map<String, dynamic>> _trades = [];
   bool _loadingTrades = true;
+  Map<String, dynamic>? _truthConsensus;
 
   /// Best-effort: refresh with live odds from `GET /markets/{id}` and
   /// recent trade activity from `GET /markets/{id}/trades`.
@@ -42,18 +43,108 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
     try {
       final jsonFuture = callitApi.getMarket(_market.id);
       final tradesFuture = callitApi.getMarketTrades(_market.id);
+      final truthFuture = callitApi.fetchTruthConsensus(_market.id);
+
       final json = await jsonFuture;
       final trades = await tradesFuture;
+      final truth = await truthFuture;
+
       if (!mounted) return;
       setState(() {
         _market = Market.fromApi(json);
         _trades = trades.whereType<Map<String, dynamic>>().toList();
+        _truthConsensus = (truth['data'] as Map?)?.cast<String, dynamic>() ?? truth;
         _loadingTrades = false;
       });
     } catch (_) {
       // Keep showing what we were passed.
       if (mounted) setState(() => _loadingTrades = false);
     }
+  }
+
+  void _showTruthConsensusSheet() {
+    final entry = _truthConsensus?['encyclopediaEntry'] as String? ?? 'No analysis synthesized yet.';
+    final verdict = _truthConsensus?['consensusVerdict'] as String? ?? 'Calculating...';
+    final factors = (_truthConsensus?['keyFactors'] as List?)?.cast<String>() ?? [];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(ctx).size.height * 0.78,
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        decoration: const BoxDecoration(
+          color: AppColors.paper,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.mist,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            Row(
+              children: const [
+                Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'AI TRUTH ENCYCLOPEDIA (NEAR THESIS)',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.5),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(verdict, style: AppTextStyles.h2.copyWith(fontSize: 20)),
+            const SizedBox(height: 14),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.mist),
+                      ),
+                      child: Text(
+                        entry,
+                        style: AppTextStyles.body(14, color: AppColors.ink, height: 1.6),
+                      ),
+                    ),
+                    if (factors.isNotEmpty) ...[
+                      const SizedBox(height: 18),
+                      Text('Key Evidence Drivers', style: AppTextStyles.h3),
+                      const SizedBox(height: 8),
+                      ...factors.map((f) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Expanded(child: Text(f, style: AppTextStyles.body(13, color: AppColors.slate))),
+                          ],
+                        ),
+                      )),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   bool _sharing = false;
@@ -200,6 +291,64 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // AI Truth Consensus Card (NEAR Hackathon - Illia's Thesis)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                border: Border.all(color: AppColors.ink, width: 1.3),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: const [
+                          Icon(Icons.auto_awesome, color: Colors.amber, size: 16),
+                          SizedBox(width: 6),
+                          Text('AI TRUTH CONSENSUS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 0.5)),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.mist,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text('Living Encyclopedia', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _truthConsensus?['consensusVerdict'] ?? 'Perpetual truth calculation in progress...',
+                    style: AppTextStyles.h3.copyWith(fontSize: 16),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Perpetually truth-derived from real economic stakes and verified sources, rather than editorial opinion.',
+                    style: AppTextStyles.body(13, color: AppColors.slate),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _showTruthConsensusSheet,
+                      icon: const Icon(Icons.menu_book_rounded, size: 16),
+                      label: const Text('Read Full Truth Entry'),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
                   ),
                 ],
               ),

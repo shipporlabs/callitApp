@@ -277,6 +277,47 @@ class CallitApi {
     if (data is List) return data;
     return (data as Map?)?['items'] as List<dynamic>? ?? [];
   }
+
+  // ---- NEAR Intents & AI Truth Consensus (NEAR Hackathon) -------------
+
+  /// Retrieves supported cross-chain tokens from NEAR Intents (1Click).
+  Future<List<dynamic>> fetchNearTokens() async {
+    final data = await _c.get('/near/tokens', auth: false);
+    if (data is List) return data;
+    return (data as Map?)?['data'] as List<dynamic>? ?? [];
+  }
+
+  /// Obtains a guaranteed cross-chain swap quote and single-use deposit address
+  /// powered by NEAR Intents / Defuse Protocol.
+  Future<Map<String, dynamic>> createNearIntentQuote({
+    required String originAsset,
+    required String amount,
+    String? recipient,
+    String? destinationAsset,
+    bool dry = false,
+  }) async {
+    final data = await _c.post('/near/deposit/quote', body: {
+      'originAsset': originAsset,
+      'amount': amount,
+      if (recipient != null && recipient.isNotEmpty) 'recipient': recipient,
+      if (destinationAsset != null) 'destinationAsset': destinationAsset,
+      'dry': dry,
+    });
+    return (data as Map?)?.cast<String, dynamic>() ?? {};
+  }
+
+  /// Polls status of a NEAR Intents deposit by its [depositAddress].
+  Future<Map<String, dynamic>> getNearDepositStatus(String depositAddress) async {
+    final data = await _c.get('/near/deposit/status', query: {'depositAddress': depositAddress}, auth: false);
+    return (data as Map?)?.cast<String, dynamic>() ?? {};
+  }
+
+  /// Fetches the dynamic AI-synthesized Truth Consensus encyclopedia entry
+  /// for a market (Illia Polosukhin's hackathon benchmark thesis).
+  Future<Map<String, dynamic>> fetchTruthConsensus(String marketId) async {
+    final data = await _c.get('/markets/$marketId/truth-consensus', auth: false);
+    return (data as Map?)?.cast<String, dynamic>() ?? {};
+  }
 }
 
 /// Convenience accessor — `callitApi.listMarkets(...)` reads a little

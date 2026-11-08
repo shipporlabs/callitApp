@@ -5,6 +5,7 @@ import '../../theme/app_text_styles.dart';
 import 'add_wallet_screen.dart';
 import 'crypto_deposit_screen.dart';
 import 'fund_wallet_screen.dart';
+import 'near_intents_deposit_screen.dart';
 
 Future<void> showDepositSelectionSheet(
   BuildContext context, {
@@ -75,6 +76,26 @@ class DepositSelectionSheet extends StatelessWidget {
     );
   }
 
+  void _handleNearIntentsDeposit(BuildContext context) async {
+    final nav = Navigator.of(context);
+    nav.pop(); // dismiss sheet
+
+    if (!TokenStore.instance.hasWallet) {
+      final connected = await nav.push<bool>(
+        MaterialPageRoute(builder: (_) => const AddWalletScreen()),
+      );
+      if (connected != true || !TokenStore.instance.hasWallet) return;
+    }
+
+    final address = walletAddress.isNotEmpty
+        ? walletAddress
+        : (TokenStore.instance.walletAddress ?? '');
+
+    nav.push(
+      MaterialPageRoute(builder: (_) => NearIntentsDepositScreen(walletAddress: address)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -123,6 +144,16 @@ class DepositSelectionSheet extends StatelessWidget {
             badge: 'USDC / SOL / USDT',
             icon: Icons.qr_code_2_rounded,
             onTap: () => _handleCryptoDeposit(context),
+          ),
+          const SizedBox(height: 12),
+
+          // Option C: NEAR Intents 1-Click Multi-Chain
+          _DepositOptionTile(
+            title: 'Deposit via NEAR Intents (1-Click)',
+            subtitle: 'Instant cross-chain deposits from NEAR, Base, ETH, or Solana',
+            badge: 'NEAR / Base / ETH',
+            icon: Icons.bolt_rounded,
+            onTap: () => _handleNearIntentsDeposit(context),
           ),
         ],
       ),
