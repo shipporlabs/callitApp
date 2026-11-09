@@ -3,7 +3,6 @@ import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/market_card.dart';
 import '../../core/widgets/pill_chip.dart';
-import '../../data/mock_markets.dart';
 import '../../models/market.dart';
 import '../../core/widgets/section_header.dart';
 import '../../theme/app_colors.dart';

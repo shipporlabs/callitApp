@@ -129,8 +129,8 @@ class DepositSelectionSheet extends StatelessWidget {
 
           // Option A: Naira Bank Transfer
           _DepositOptionTile(
-            title: 'Deposit Naira (Bank Transfer)',
-            subtitle: 'Instant transfer via Nigerian banks (OPay, Kuda, GTBank, etc.)',
+            title: 'Naira Bank Transfer',
+            subtitle: 'Instant transfer via Nigerian banks (OPay, Kuda, GTBank)',
             badge: 'Instant NGN',
             icon: Icons.account_balance_rounded,
             onTap: () => _handleNairaDeposit(context),
@@ -139,9 +139,9 @@ class DepositSelectionSheet extends StatelessWidget {
 
           // Option B: Solana Crypto
           _DepositOptionTile(
-            title: 'Deposit Crypto (Solana Network)',
+            title: 'Solana Crypto',
             subtitle: 'Send USDC, USDT, or SOL from Phantom, Binance, or Bybit',
-            badge: 'USDC / SOL / USDT',
+            badge: 'USDC / SOL',
             icon: Icons.qr_code_2_rounded,
             onTap: () => _handleCryptoDeposit(context),
           ),
@@ -149,9 +149,9 @@ class DepositSelectionSheet extends StatelessWidget {
 
           // Option C: NEAR Intents 1-Click Multi-Chain
           _DepositOptionTile(
-            title: 'Deposit via NEAR Intents (1-Click)',
-            subtitle: 'Instant cross-chain deposits from NEAR, Base, ETH, or Solana',
-            badge: 'NEAR / Base / ETH',
+            title: 'NEAR Intents',
+            subtitle: '1-Click cross-chain swap from NEAR, Base, ETH, Arbitrum',
+            badge: '1-Click Swap',
             icon: Icons.bolt_rounded,
             onTap: () => _handleNearIntentsDeposit(context),
           ),
@@ -180,40 +180,50 @@ class _DepositOptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.white,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.mist),
-            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.ink, width: 1.2),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.mist.withOpacity(0.5),
-                  shape: BoxShape.circle,
+                  color: badge.contains('1-Click') ? AppColors.highlight : AppColors.mist,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.ink, width: 1.1),
                 ),
-                child: Icon(icon, size: 24, color: AppColors.ink),
+                child: Icon(icon, size: 22, color: AppColors.ink),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Flexible(
+                        Text(
+                          title,
+                          style: AppTextStyles.body(15, weight: FontWeight.w700),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: badge.contains('1-Click') ? AppColors.highlight : AppColors.mist,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: AppColors.ink, width: 0.8),
+                          ),
                           child: Text(
-                            title,
-                            style: AppTextStyles.body(15, weight: FontWeight.w700),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            badge,
+                            style: AppTextStyles.label(9, weight: FontWeight.w700, color: AppColors.ink),
                           ),
                         ),
                       ],
@@ -226,8 +236,8 @@ class _DepositOptionTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.slate),
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.ink),
             ],
           ),
         ),

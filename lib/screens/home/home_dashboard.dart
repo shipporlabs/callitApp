@@ -11,7 +11,6 @@ import '../../theme/app_text_styles.dart';
 import '../community/communities_screen.dart';
 import '../wallet/convert_screen.dart';
 import '../wallet/deposit_selection_sheet.dart';
-import '../wallet/fund_wallet_screen.dart';
 import '../wallet/wallet_screen.dart';
 import 'market_detail_screen.dart';
 
@@ -43,6 +42,15 @@ class _HomeDashboardState extends State<HomeDashboard> {
     _loadMarkets();
   }
 
+  void _openDepositSheet() {
+    final address = TokenStore.instance.walletAddress ?? '';
+    showDepositSelectionSheet(
+      context,
+      walletAddress: address,
+      onFunded: _loadBalance,
+    );
+  }
+
   Future<void> _loadBalance() async {
     final wallet = TokenStore.instance.walletAddress;
     if (wallet == null) {
@@ -62,13 +70,15 @@ class _HomeDashboardState extends State<HomeDashboard> {
     setState(() => _loadingMarkets = true);
     try {
       final result = await callitApi.listMarkets(limit: 5);
+      debugPrint('DEBUG LIST MARKETS RESULT: $result');
       final items = (result['items'] as List? ?? []).cast<Map<String, dynamic>>();
       if (!mounted) return;
       setState(() {
         _markets = items.map(Market.fromApi).toList();
         _loadingMarkets = false;
       });
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LOAD MARKETS ERROR: $e\n$st');
       if (!mounted) return;
       setState(() {
         _markets = [];
@@ -119,14 +129,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                 hidden: _hideBalance,
                 onToggleHidden: () => setState(() => _hideBalance = !_hideBalance),
                 onTapDetails: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WalletScreen())),
-                onDeposit: () {
-                  final address = TokenStore.instance.walletAddress ?? '';
-                  showDepositSelectionSheet(
-                    context,
-                    walletAddress: address,
-                    onFunded: _loadBalance,
-                  );
-                },
+                onDeposit: _openDepositSheet,
               ),
               const SizedBox(height: 24),
               Text('QUICK ACTIONS', style: AppTextStyles.label(12, color: AppColors.slate)),
@@ -137,14 +140,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     child: _QuickAction(
                       icon: Icons.add_card_rounded,
                       label: 'Fund',
-                      onTap: () {
-                        final address = TokenStore.instance.walletAddress ?? '';
-                        showDepositSelectionSheet(
-                          context,
-                          walletAddress: address,
-                          onFunded: _loadBalance,
-                        );
-                      },
+                      onTap: _openDepositSheet,
                     ),
                   ),
                   Expanded(
@@ -243,26 +239,33 @@ class _BalanceCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(border: Border.all(color: AppColors.ink, width: 1.2), borderRadius: BorderRadius.circular(6)),
-                    child: const Icon(Icons.account_balance_wallet_outlined, size: 16, color: AppColors.ink),
-                  ),
-                  const SizedBox(width: 10),
-                  Text('AVAILABLE BALANCE', style: AppTextStyles.label(11.5, color: AppColors.slate)),
-                ],
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(border: Border.all(color: AppColors.ink, width: 1.2), borderRadius: BorderRadius.circular(6)),
+                      child: const Icon(Icons.account_balance_wallet_outlined, size: 15, color: AppColors.ink),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text('AVAILABLE BALANCE', style: AppTextStyles.label(11, color: AppColors.slate), overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (onDeposit != null) ...[
                     GestureDetector(
                       onTap: onDeposit,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                         decoration: BoxDecoration(
                           color: AppColors.highlight,
                           borderRadius: BorderRadius.circular(6),
@@ -273,12 +276,12 @@ class _BalanceCard extends StatelessWidget {
                           children: [
                             const Icon(Icons.add_rounded, size: 14, color: AppColors.ink),
                             const SizedBox(width: 4),
-                            Text('DEPOSIT', style: AppTextStyles.label(10.5, color: AppColors.ink, weight: FontWeight.w800)),
+                            Text('DEPOSIT', style: AppTextStyles.label(10, color: AppColors.ink, weight: FontWeight.w800)),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                   ],
                   _IconBadgeButton(icon: Icons.arrow_outward_rounded, onTap: onTapDetails, filled: true),
                 ],

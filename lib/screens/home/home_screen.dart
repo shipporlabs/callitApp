@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onNavTap(int index) {
     if (index == 2) {
       // Create tab opens as a full-screen flow rather than replacing the body.
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PasteScreen(initialCommunity: null,)));
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PasteScreen(initialCommunity: null)));
       return;
     }
     setState(() => _index = index);

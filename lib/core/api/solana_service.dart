@@ -38,18 +38,22 @@ class SolanaService {
   static const double _solUsdPrice = 150.0;
 
   Future<dynamic> _rpc(String method, List<dynamic> params) async {
-    final res = await http
-        .post(
-          Uri.parse(rpcUrl),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params}),
-        )
-        .timeout(const Duration(seconds: 12));
-    final decoded = jsonDecode(res.body) as Map<String, dynamic>;
-    if (decoded.containsKey('error')) {
-      throw Exception((decoded['error'] as Map?)?['message'] ?? 'Solana RPC error');
+    try {
+      final res = await http
+          .post(
+            Uri.parse(rpcUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params}),
+          )
+          .timeout(const Duration(seconds: 8));
+      final decoded = jsonDecode(res.body) as Map<String, dynamic>;
+      if (decoded.containsKey('error')) {
+        return null;
+      }
+      return decoded['result'];
+    } catch (_) {
+      return null;
     }
-    return decoded['result'];
   }
 
   /// Fetches SOL + USDC balances for [wallet] (a base58 public key).

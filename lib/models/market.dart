@@ -46,8 +46,10 @@ class Market {
     final rawCategory = (json['category'] as String?) ?? 'other';
     final category = rawCategory.isEmpty ? 'Other' : rawCategory[0].toUpperCase() + rawCategory.substring(1);
 
-    final yesPriceStr = json['yesPrice'] as String?;
-    final yesPrice = yesPriceStr != null ? double.tryParse(yesPriceStr) : null;
+    final rawYesPrice = json['yesPrice'];
+    final yesPrice = rawYesPrice is num
+        ? rawYesPrice.toDouble()
+        : (rawYesPrice is String ? double.tryParse(rawYesPrice) : null);
     final yesPricePct = yesPrice != null ? (yesPrice * 100).clamp(0, 100).toDouble() : 50.0;
 
     final endTime = json['endTime'] as int?;
@@ -70,9 +72,12 @@ class Market {
 
     final titleStr = (json['title'] as String?)?.trim();
     final questionStr = (json['question'] as String?)?.trim();
+    final descStr = (json['description'] as String?)?.trim();
     final resolvedQuestion = (titleStr != null && titleStr.isNotEmpty)
         ? titleStr
-        : ((questionStr != null && questionStr.isNotEmpty) ? questionStr : 'Untitled market');
+        : ((questionStr != null && questionStr.isNotEmpty)
+            ? questionStr
+            : ((descStr != null && descStr.isNotEmpty) ? descStr : 'Untitled market'));
 
     return Market(
       id: (json['marketId'] as String?) ?? '',

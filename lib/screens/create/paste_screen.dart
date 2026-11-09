@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_button.dart';
@@ -34,6 +35,13 @@ class _PasteScreenState extends State<PasteScreen> {
     'https://x.com/someone/status/123456789',
     'Will SOL flip \$300 before March?',
   ];
+
+  void _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text != null && data!.text!.isNotEmpty) {
+      setState(() => _controller.text = data.text!);
+    }
+  }
 
   void _compile() async {
     setState(() => _compiling = true);
@@ -73,87 +81,95 @@ class _PasteScreenState extends State<PasteScreen> {
         title: Text('New market', style: AppTextStyles.h3),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Paste any take', style: AppTextStyles.h1.copyWith(fontSize: 28)),
-              const SizedBox(height: 8),
-              Text(
-                'A headline, a tweet link, or your own question. Callit turns it into a live market.',
-                style: AppTextStyles.subtitle,
-              ),
-              if (widget.initialCommunity != null) ...[
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.ink, width: 1.2),
-                      borderRadius: BorderRadius.circular(4),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: (constraints.maxHeight - 28).clamp(0, double.infinity)),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Paste any take', style: AppTextStyles.h1.copyWith(fontSize: 28)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'A headline, a tweet link, or your own question. Callit turns it into a live market.',
+                      style: AppTextStyles.subtitle,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.groups_outlined, size: 14, color: AppColors.ink),
-                        const SizedBox(width: 6),
-                        Text('Posting to ${widget.initialCommunity!.name}', style: AppTextStyles.body(12, weight: FontWeight.w600)),
-                      ],
+                    if (widget.initialCommunity != null) ...[
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.ink, width: 1.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.groups_outlined, size: 14, color: AppColors.ink),
+                              const SizedBox(width: 6),
+                              Text('Posting to ${widget.initialCommunity!.name}', style: AppTextStyles.body(12, weight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        border: Border.all(color: AppColors.mist),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: TextField(
+                        controller: _controller,
+                        maxLines: 4,
+                        onChanged: (_) => setState(() {}),
+                        style: AppTextStyles.body(16, weight: FontWeight.w500),
+                        decoration: const InputDecoration(
+                          hintText: 'Paste a headline, tweet link, or type a question…',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(16),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  border: Border.all(color: AppColors.mist),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: TextField(
-                  controller: _controller,
-                  maxLines: 6,
-                  onChanged: (_) => setState(() {}),
-                  style: AppTextStyles.body(16, weight: FontWeight.w500),
-                  decoration: const InputDecoration(
-                    hintText: 'Paste a headline, tweet link, or type a question…',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(18),
-                  ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: _pasteFromClipboard,
+                        icon: const Icon(Icons.content_paste_rounded, size: 16),
+                        label: const Text('Paste from clipboard'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('Try one of these', style: AppTextStyles.caption),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _examples.map((e) {
+                        return ActionChip(
+                          label: Text(e, overflow: TextOverflow.ellipsis),
+                          onPressed: () => setState(() => _controller.text = e),
+                        );
+                      }).toList(),
+                    ),
+                    const Spacer(),
+                    const SizedBox(height: 16),
+                    AppButton(
+                      label: 'Compile market',
+                      icon: Icons.auto_awesome_rounded,
+                      loading: _compiling,
+                      onPressed: _controller.text.trim().isEmpty ? null : _compile,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.content_paste_rounded, size: 16),
-                  label: const Text('Paste from clipboard'),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text('Try one of these', style: AppTextStyles.caption),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _examples.map((e) {
-                  return ActionChip(
-                    label: Text(e, overflow: TextOverflow.ellipsis),
-                    onPressed: () => setState(() => _controller.text = e),
-                  );
-                }).toList(),
-              ),
-              const Spacer(),
-              AppButton(
-                label: 'Compile market',
-                icon: Icons.auto_awesome_rounded,
-                loading: _compiling,
-                onPressed: _controller.text.trim().isEmpty ? null : _compile,
-              ),
-            ],
+            ),
           ),
         ),
       ),

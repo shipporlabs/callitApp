@@ -514,7 +514,7 @@ class _CreateSignSheetState extends State<_CreateSignSheet> {
     try {
       final wallet = TokenStore.instance.walletAddress!;
       final createId = widget.quote['createId'] as String;
-      final build = await callitApi.createBuild(createId: createId, wallet: wallet);
+      await callitApi.createBuild(createId: createId, wallet: wallet);
 
       // Hook point: hand `build['transaction']` (base64) to Solana Mobile
       // Wallet Adapter for the user's real signature. Simulated here.

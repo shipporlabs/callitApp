@@ -175,9 +175,12 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
                   children: const [
                     Icon(Icons.bolt_rounded, color: Colors.amber, size: 16),
                     SizedBox(width: 6),
-                    Text(
-                      'Cross-Chain Intent Rail • No Bridges Needed',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                    Flexible(
+                      child: Text(
+                        'Cross-Chain Intent Rail • Zero Bridges',
+                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -255,13 +258,13 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
                         ),
                         child: _loadingQuote
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Text('Calculate Quote'),
+                            : const Text('Get Quote', style: TextStyle(fontWeight: FontWeight.w700)),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: AppButton(
-                        label: 'Get Deposit Address',
+                        label: 'Deposit Now',
                         loading: _generatingAddress,
                         onPressed: () => _getQuote(dry: false),
                       ),

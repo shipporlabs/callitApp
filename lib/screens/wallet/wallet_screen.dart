@@ -9,7 +9,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'convert_screen.dart';
 import 'deposit_selection_sheet.dart';
-import 'fund_wallet_screen.dart';
 
 /// The portfolio screen: balance, open positions, and trade history for
 /// the account's FossaPay-provisioned wallet. Reached from a "Positions"

@@ -65,7 +65,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
   void _showTruthConsensusSheet() {
     final entry = _truthConsensus?['encyclopediaEntry'] as String? ?? 'No analysis synthesized yet.';
     final verdict = _truthConsensus?['consensusVerdict'] as String? ?? 'Calculating...';
-    final factors = (_truthConsensus?['keyFactors'] as List?)?.cast<String>() ?? [];
+    final factors = (_truthConsensus?['keyFactors'] as List?)?.map((e) => e.toString()).toList() ?? [];
 
     showModalBottomSheet(
       context: context,
