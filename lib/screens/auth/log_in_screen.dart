@@ -18,8 +18,8 @@ class LogInScreen extends StatefulWidget {
 }
 
 class _LogInScreenState extends State<LogInScreen> {
-  final _emailController = TextEditingController(text: 'alfrederic371@gmail.com');
-  final _passwordController = TextEditingController(text: 'Password123!');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _loading = false;
 
   void _submit() async {

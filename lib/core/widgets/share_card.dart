@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'app_icon.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -41,7 +42,7 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
   final _boundaryKey = GlobalKey();
   bool _sharing = false;
 
-  String get _link => widget.shareUrl ?? 'callit.my/m/${widget.market.id}';
+  String get _link => widget.shareUrl ?? 'callit.my/${widget.market.id}';
 
   Future<void> _share() async {
     if (_sharing) return;
@@ -100,13 +101,13 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: AppColors.ink,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: AppColors.ink, width: 1.4),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.mist, width: 1.2),
               ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(12),
                   onTap: _sharing ? null : _share,
                   child: Center(
                     child: _sharing
@@ -114,7 +115,7 @@ class _ShareCardSheetState extends State<_ShareCardSheet> {
                         : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.ios_share_rounded, size: 18, color: AppColors.paper),
+                              const AppIcon(Ic.share, size: 18, color: AppColors.paper),
                               const SizedBox(width: 8),
                               Text('Share image', style: AppTextStyles.button.copyWith(color: AppColors.paper)),
                             ],
@@ -150,7 +151,7 @@ class _MarketShareCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.ink,
-        border: Border.all(color: AppColors.ink, width: 1.4),
+        border: Border.all(color: AppColors.mist, width: 1.2),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

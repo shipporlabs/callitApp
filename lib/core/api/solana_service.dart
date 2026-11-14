@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+
+import 'callit_api.dart';
 
 /// On-chain balances for a Solana wallet: native SOL plus the USDC SPL
 /// token (Callit's trading asset), and a rough combined USD estimate.
@@ -60,7 +63,19 @@ class SolanaService {
   /// Best-effort: on any RPC failure (bad address, network issue, rate
   /// limit) this returns [SolanaBalances.zero] rather than throwing, so a
   /// flaky public RPC never blocks the wallet screen from rendering.
-  Future<SolanaBalances> getBalances(String wallet) async {
+  Future<SolanaBalances> getBalances(String wallet, {bool fresh = false}) async {
+    // 1) Ask our backend first: it reads Solana for us, caches, and works in
+    //    the browser (the public RPC refuses web origins with a 403).
+    try {
+      final r = await callitApi.getWalletBalances(wallet, fresh: fresh);
+      final sol = (r['sol'] as num?)?.toDouble();
+      final usdc = (r['usdc'] as num?)?.toDouble();
+      if (sol != null && usdc != null) {
+        return SolanaBalances(solBalance: sol, usdcBalance: usdc, totalUsdValue: sol * _solUsdPrice + usdc);
+      }
+    } catch (_) {}
+    // 2) Direct RPC only where the platform is allowed to use it.
+    if (kIsWeb) return SolanaBalances.zero;
     try {
       final solFuture = _rpc('getBalance', [wallet]);
       final tokenFuture = _rpc('getTokenAccountsByOwner', [

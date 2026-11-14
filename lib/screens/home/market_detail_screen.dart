@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/api/token_store.dart';
@@ -94,7 +95,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
             ),
             Row(
               children: const [
-                Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
+                AppIcon(Ic.sparkles, color: Colors.amber, size: 20),
                 SizedBox(width: 8),
                 Text(
                   'AI TRUTH ENCYCLOPEDIA (NEAR THESIS)',
@@ -152,7 +153,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
   /// Builds a shareable PnL-style image card for this market and opens
   /// the system share sheet with it — the deep link from `POST
   /// /share-card` is printed on the card when that call succeeds, and
-  /// the card still works (with a generic `callit.my/m/{id}` link) if it
+  /// the card still works (with a generic `callit.my/{id}` link) if it
   /// doesn't, since the image itself doesn't depend on the API.
   Future<void> _shareMarket() async {
     if (_sharing) return;
@@ -207,7 +208,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
             onPressed: _sharing ? null : _shareMarket,
             icon: _sharing
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.ios_share_rounded),
+                : const AppIcon(Ic.share),
           ),
           const SizedBox(width: 8),
         ],
@@ -222,8 +223,8 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
                 constraints: const BoxConstraints(maxHeight: 340, minHeight: 140),
                 decoration: BoxDecoration(
                   color: AppColors.mist.withOpacity(0.4),
-                  border: Border.all(color: AppColors.ink, width: 1.3),
-                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.mist, width: 1.2),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: Image.network(
@@ -263,8 +264,8 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColors.white,
-                border: Border.all(color: AppColors.ink, width: 1.3),
-                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.mist, width: 1.2),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,8 +303,8 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: AppColors.white,
-                border: Border.all(color: AppColors.ink, width: 1.3),
-                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.mist, width: 1.2),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +314,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
                     children: [
                       Row(
                         children: const [
-                          Icon(Icons.auto_awesome, color: Colors.amber, size: 16),
+                          AppIcon(Ic.sparkles, color: Colors.amber, size: 16),
                           SizedBox(width: 6),
                           Text('AI TRUTH CONSENSUS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 0.5)),
                         ],
@@ -322,7 +323,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: AppColors.mist,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text('Living Encyclopedia', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
                       ),
@@ -343,10 +344,10 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: _showTruthConsensusSheet,
-                      icon: const Icon(Icons.menu_book_rounded, size: 16),
+                      icon: const AppIcon(Ic.book, size: 16),
                       label: const Text('Read Full Truth Entry'),
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                     ),
                   ),
@@ -367,15 +368,15 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.white,
-                border: Border.all(color: AppColors.ink, width: 1.3),
-                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.mist, width: 1.2),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.link, size: 18, color: AppColors.slate),
+                  const AppIcon(Ic.link, size: 18, color: AppColors.slate),
                   const SizedBox(width: 10),
                   Expanded(child: Text('Official result feed', style: AppTextStyles.body(14, weight: FontWeight.w600))),
-                  const Icon(Icons.open_in_new, size: 16, color: AppColors.slate),
+                  const AppIcon(Ic.arrowUpRight, size: 16, color: AppColors.slate),
                 ],
               ),
             ),
@@ -389,8 +390,8 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: AppColors.white,
-                  border: Border.all(color: AppColors.ink, width: 1.3),
-                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.mist, width: 1.2),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
                   child: Text('No trades yet — be the first to call it!', style: AppTextStyles.caption),
@@ -400,8 +401,8 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.white,
-                  border: Border.all(color: AppColors.ink, width: 1.3),
-                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.mist, width: 1.2),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: ListView.separated(
                   shrinkWrap: true,
@@ -425,7 +426,7 @@ class _MarketDetailScreenState extends State<MarketDetailScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: isYes ? AppColors.yes.withOpacity(0.12) : AppColors.no.withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   isYes ? 'YES' : 'NO',
@@ -461,14 +462,14 @@ class _SideButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: color,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.ink, width: 1.4),
-            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: AppColors.mist, width: 1.2),
+            borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Center(
@@ -628,7 +629,7 @@ class _TradeSheetState extends State<_TradeSheet> {
                     width: 64,
                     height: 64,
                     decoration: const BoxDecoration(color: AppColors.no, shape: BoxShape.circle),
-                    child: const Icon(Icons.close_rounded, color: AppColors.white, size: 32),
+                    child: const AppIcon(Ic.close, color: AppColors.white, size: 32),
                   ),
                   const SizedBox(height: 16),
                   Text('Trade failed', style: AppTextStyles.h2),
@@ -648,7 +649,7 @@ class _TradeSheetState extends State<_TradeSheet> {
                     width: 64,
                     height: 64,
                     decoration: const BoxDecoration(color: AppColors.yes, shape: BoxShape.circle),
-                    child: const Icon(Icons.check_rounded, color: AppColors.white, size: 32),
+                    child: const AppIcon(Ic.tick, color: AppColors.white, size: 32),
                   ),
                   const SizedBox(height: 16),
                   Text('Position confirmed', style: AppTextStyles.h2),

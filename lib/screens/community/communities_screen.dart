@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/pill_chip.dart';
@@ -89,7 +90,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
         leading: const BackButton(),
         title: Text('Communities', style: AppTextStyles.h3),
         actions: [
-          IconButton(onPressed: _createCommunity, icon: const Icon(Icons.add_rounded)),
+          IconButton(onPressed: _createCommunity, icon: const AppIcon(Ic.add)),
           const SizedBox(width: 8),
         ],
       ),
@@ -105,7 +106,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                         Center(
                           child: Column(
                             children: [
-                              const Icon(Icons.groups_outlined, size: 48, color: AppColors.slate),
+                              const AppIcon(Ic.group, size: 48, color: AppColors.slate),
                               const SizedBox(height: 16),
                               Text('No communities yet', style: AppTextStyles.h3),
                               const SizedBox(height: 8),
@@ -176,7 +177,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                                         onPressed: () => Navigator.of(context).push(
                                           MaterialPageRoute(builder: (_) => PasteScreen(initialCommunity: c)),
                                         ),
-                                        icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.ink, size: 22),
+                                        icon: const AppIcon(Ic.add, color: AppColors.ink, size: 22),
                                       ),
                                     ],
                                   ),

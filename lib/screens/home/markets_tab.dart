@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/market_card.dart';
@@ -136,12 +137,12 @@ class _MarketsTabState extends State<MarketsTab> {
                                 MaterialPageRoute(builder: (_) => const CommunitiesScreen()),
                               );
                             },
-                            icon: const Icon(Icons.groups_outlined, color: AppColors.ink),
+                            icon: const AppIcon(Ic.group, color: AppColors.ink),
                             tooltip: 'Communities & Leaderboard',
                           ),
                           IconButton(
                             onPressed: () {},
-                            icon: const Icon(Icons.notifications_outlined, color: AppColors.ink),
+                            icon: const AppIcon(Ic.bell, color: AppColors.ink),
                           ),
                         ],
                       ),
@@ -187,7 +188,7 @@ class _MarketsTabState extends State<MarketsTab> {
                                 onFunded: _loadBalance,
                               );
                             },
-                            icon: const Icon(Icons.add_card_rounded, size: 16),
+                            icon: const AppIcon(Ic.cardAdd, size: 16),
                             label: const Text('Fund / Deposit'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.highlight,
@@ -213,7 +214,7 @@ class _MarketsTabState extends State<MarketsTab> {
                       style: AppTextStyles.body(14),
                       decoration: const InputDecoration(
                         hintText: 'SEARCH MARKETS',
-                        prefixIcon: Icon(Icons.search, color: AppColors.ink),
+                        prefixIcon: AppIcon(Ic.search, color: AppColors.ink),
                       ),
                     ),
                   ),
@@ -256,7 +257,7 @@ class _MarketsTabState extends State<MarketsTab> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.search_off_rounded, size: 48, color: AppColors.slate),
+                          const AppIcon(Ic.searchOff, size: 48, color: AppColors.slate),
                           const SizedBox(height: 12),
                           Text('No markets match that search yet.', style: AppTextStyles.subtitle, textAlign: TextAlign.center),
                         ],

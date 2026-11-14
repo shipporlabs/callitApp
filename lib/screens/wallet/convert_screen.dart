@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_button.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -68,7 +69,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                       onTap: _swap,
                       child: const Padding(
                         padding: EdgeInsets.all(10),
-                        child: Icon(Icons.swap_vert_rounded, color: AppColors.paper, size: 20),
+                        child: AppIcon(Ic.swapV, color: AppColors.paper, size: 20),
                       ),
                     ),
                   ),

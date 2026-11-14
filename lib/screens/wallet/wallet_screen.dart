@@ -1,5 +1,6 @@
 import 'package:callit_app/screens/wallet/add_wallet_screen.dart';
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/api/token_store.dart';
 import '../../core/api/solana_service.dart';
@@ -72,7 +73,7 @@ class _WalletNotReadyState extends State<_WalletNotReady> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.account_balance_wallet_outlined, size: 48, color: AppColors.slate),
+            const AppIcon(Ic.wallet, size: 48, color: AppColors.slate),
             const SizedBox(height: 16),
             Text('Setting up your wallet', style: AppTextStyles.h3),
             const SizedBox(height: 8),
@@ -260,8 +261,8 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: AppColors.white,
-                border: Border.all(color: AppColors.ink, width: 1.3),
-                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.mist, width: 1.2),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Center(
                 child: Text('No trades recorded for this wallet yet.', style: AppTextStyles.caption),
@@ -278,8 +279,8 @@ class _ConnectedWalletState extends State<_ConnectedWallet> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.white,
-                    border: Border.all(color: AppColors.ink, width: 1.3),
-                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.mist, width: 1.2),
+                    borderRadius: BorderRadius.circular(18),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -328,7 +329,7 @@ class _TicketCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.ink,
-        border: Border.all(color: AppColors.ink, width: 1.4),
+        border: Border.all(color: AppColors.mist, width: 1.2),
         borderRadius: BorderRadius.circular(14),
       ),
       padding: const EdgeInsets.all(22),
@@ -414,7 +415,7 @@ class _PositionTile extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.white, border: Border.all(color: AppColors.ink, width: 1.3), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: AppColors.white, border: Border.all(color: AppColors.mist, width: 1.2), borderRadius: BorderRadius.circular(18)),
       child: Row(
         children: [
           PillChip(
@@ -476,9 +477,9 @@ class _WalletAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.inkSurface,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14),

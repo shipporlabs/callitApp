@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/api/token_store.dart';
@@ -49,7 +50,7 @@ class CryptoDepositScreen extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: AppColors.no, size: 22),
+                  const AppIcon(Ic.alert, color: AppColors.no, size: 22),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -164,17 +165,17 @@ class CryptoDepositScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   InkWell(
                     onTap: () => _copyAddress(context, address),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(18),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: AppColors.mist.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(18),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.copy_rounded, size: 16, color: AppColors.ink),
+                          const AppIcon(Ic.copy, size: 16, color: AppColors.ink),
                           const SizedBox(width: 6),
                           Text('Copy Address', style: AppTextStyles.body(13, weight: FontWeight.w700)),
                         ],
@@ -215,8 +216,7 @@ class _AssetBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.check_circle_rounded,
+          AppIcon(Ic.check,
             size: 14,
             color: isPrimary ? AppColors.highlight : AppColors.yes,
           ),

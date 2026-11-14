@@ -111,7 +111,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       value: _agreed,
                       onChanged: (v) => setState(() => _agreed = v ?? false),
                       activeColor: AppColors.ink,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     Expanded(
                       child: Padding(

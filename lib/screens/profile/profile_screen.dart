@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/api/token_store.dart';
 import '../../core/widgets/app_avatar.dart';
@@ -104,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   ),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.settings_outlined, color: AppColors.ink)),
+                  IconButton(onPressed: () {}, icon: const AppIcon(Ic.settings, color: AppColors.ink)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -233,7 +234,7 @@ class _MenuItem extends StatelessWidget {
               Icon(icon, size: 20, color: tint),
               const SizedBox(width: 14),
               Expanded(child: Text(label, style: AppTextStyles.body(15, weight: FontWeight.w600, color: tint))),
-              Icon(Icons.chevron_right_rounded, color: AppColors.slate.withOpacity(0.6)),
+              AppIcon(Ic.chevronRight, color: AppColors.slate.withOpacity(0.6)),
             ],
           ),
         ),

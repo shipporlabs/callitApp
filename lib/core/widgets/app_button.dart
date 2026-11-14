@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import 'app_icon.dart';
 
 enum AppButtonVariant { primary, secondary, outline, danger }
 
-/// One button widget for the whole app, so every CTA looks and behaves
-/// the same way. `variant` controls color; `loading` swaps the label for
-/// a small spinner without changing the button's size.
-class AppButton extends StatelessWidget {
+/// One pill button for the whole app, matching the website:
+///  - primary: ink, with a yellow arrow disc that nudges right on press,
+///  - secondary: yellow,
+///  - outline: white with a soft border,
+///  - danger: red.
+/// No shadows. Pressing scales it to 98%.
+class AppButton extends StatefulWidget {
   const AppButton({
     super.key,
     required this.label,
@@ -16,6 +20,7 @@ class AppButton extends StatelessWidget {
     this.loading = false,
     this.icon,
     this.expand = true,
+    this.arrow = true,
   });
 
   final String label;
@@ -25,77 +30,94 @@ class AppButton extends StatelessWidget {
   final IconData? icon;
   final bool expand;
 
+  /// Show the trailing arrow disc (primary and secondary only).
+  final bool arrow;
+
+  @override
+  State<AppButton> createState() => _AppButtonState();
+}
+
+class _AppButtonState extends State<AppButton> {
+  bool _down = false;
+
   @override
   Widget build(BuildContext context) {
-    final Color background;
-    final Color foreground;
-    final BoxBorder? border;
-
-    switch (variant) {
+    final Color bg, fg;
+    BorderSide side = BorderSide.none;
+    Color disc = AppColors.yellowOrInk(widget.variant);
+    switch (widget.variant) {
       case AppButtonVariant.primary:
-        background = AppColors.highlight;
-        foreground = AppColors.ink;
-        border = Border.all(color: AppColors.ink, width: 1.4);
+        bg = AppColors.ink;
+        fg = AppColors.paper;
         break;
       case AppButtonVariant.secondary:
-        background = AppColors.ink;
-        foreground = AppColors.paper;
-        border = Border.all(color: AppColors.ink, width: 1.4);
+        bg = AppColors.highlight;
+        fg = AppColors.ink;
         break;
       case AppButtonVariant.outline:
-        background = Colors.transparent;
-        foreground = AppColors.ink;
-        border = Border.all(color: AppColors.ink, width: 1.4);
+        bg = AppColors.white;
+        fg = AppColors.ink;
+        side = const BorderSide(color: AppColors.mist, width: 1.2);
         break;
       case AppButtonVariant.danger:
-        background = AppColors.no;
-        foreground = AppColors.white;
-        border = Border.all(color: AppColors.ink, width: 1.4);
+        bg = AppColors.no;
+        fg = AppColors.white;
         break;
     }
+    final showArrow = widget.arrow && (widget.variant == AppButtonVariant.primary || widget.variant == AppButtonVariant.secondary) && widget.icon == null;
+    final enabled = widget.onPressed != null && !widget.loading;
 
-    final child = loading
-        ? SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2.4, color: foreground),
-          )
+    final label = widget.loading
+        ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: fg))
         : Row(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (icon != null) ...[
-                Icon(icon, size: 18, color: foreground),
-                const SizedBox(width: 8),
-              ],
-              Flexible(
-                child: Text(
-                  label,
-                  style: AppTextStyles.button.copyWith(color: foreground),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
+              if (widget.icon != null) ...[Icon(widget.icon, size: 18, color: fg), const SizedBox(width: 8)],
+              Flexible(child: Text(widget.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.button.copyWith(color: fg))),
             ],
           );
 
-    return SizedBox(
-      width: expand ? double.infinity : null,
-      height: 56,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: onPressed == null ? background.withOpacity(0.5) : background,
-          borderRadius: BorderRadius.circular(4),
-          border: border,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(4),
-            onTap: loading ? null : onPressed,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Center(child: child),
+    return AnimatedScale(
+      scale: _down && enabled ? 0.98 : 1,
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOut,
+      child: Opacity(
+        opacity: widget.onPressed == null ? 0.5 : 1,
+        child: SizedBox(
+          width: widget.expand ? double.infinity : null,
+          height: 56,
+          child: Material(
+            color: bg,
+            shape: StadiumBorder(side: side),
+            child: InkWell(
+              customBorder: const StadiumBorder(),
+              onTap: enabled ? widget.onPressed : null,
+              onHighlightChanged: (v) => setState(() => _down = v),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(showArrow ? 26 : 24, 0, showArrow ? 8 : 24, 0),
+                child: Row(
+                  mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
+                  children: [
+                    if (widget.expand) const Spacer(),
+                    label,
+                    if (widget.expand) const Spacer(),
+                    if (showArrow && !widget.loading) ...[
+                      if (!widget.expand) const SizedBox(width: 14),
+                      AnimatedSlide(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOut,
+                        offset: Offset(_down ? 0.12 : 0, 0),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(color: disc, shape: BoxShape.circle),
+                          child: Center(child: AppIcon(Ic.arrowRight, size: 20, color: widget.variant == AppButtonVariant.primary ? AppColors.ink : AppColors.highlight)),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),

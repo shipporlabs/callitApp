@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/api/solana_service.dart';
 import '../../core/api/token_store.dart';
@@ -179,8 +180,8 @@ class _HomeDashboardState extends State<HomeDashboard> {
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: AppColors.white,
-                    border: Border.all(color: AppColors.ink, width: 1.3),
-                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.mist, width: 1.2),
+                    borderRadius: BorderRadius.circular(18),
                   ),
                   child: Center(child: Text('No markets yet — check back soon.', style: AppTextStyles.caption)),
                 )
@@ -230,7 +231,7 @@ class _BalanceCard extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: AppColors.white,
-        border: Border.all(color: AppColors.ink, width: 1.4),
+        border: Border.all(color: AppColors.mist, width: 1.2),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -247,8 +248,8 @@ class _BalanceCard extends StatelessWidget {
                       width: 28,
                       height: 28,
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(border: Border.all(color: AppColors.ink, width: 1.2), borderRadius: BorderRadius.circular(6)),
-                      child: const Icon(Icons.account_balance_wallet_outlined, size: 15, color: AppColors.ink),
+                      decoration: BoxDecoration(border: Border.all(color: AppColors.mist, width: 1.2), borderRadius: BorderRadius.circular(12)),
+                      child: const AppIcon(Ic.wallet, size: 15, color: AppColors.ink),
                     ),
                     const SizedBox(width: 8),
                     Flexible(
@@ -268,13 +269,13 @@ class _BalanceCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                         decoration: BoxDecoration(
                           color: AppColors.highlight,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: AppColors.ink, width: 1.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.mist, width: 1.2),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.add_rounded, size: 14, color: AppColors.ink),
+                            const AppIcon(Ic.add, size: 14, color: AppColors.ink),
                             const SizedBox(width: 4),
                             Text('DEPOSIT', style: AppTextStyles.label(10, color: AppColors.ink, weight: FontWeight.w800)),
                           ],
@@ -325,7 +326,7 @@ class _QuickAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(18),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Column(
@@ -336,8 +337,8 @@ class _QuickAction extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: AppColors.white,
-                border: Border.all(color: AppColors.ink, width: 1.3),
-                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.mist, width: 1.2),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Icon(icon, size: 21, color: AppColors.ink),
             ),
@@ -361,15 +362,15 @@ class _IconBadgeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: filled ? AppColors.highlight : AppColors.white,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
           width: 40,
           height: 40,
           alignment: Alignment.center,
-          decoration: BoxDecoration(border: Border.all(color: AppColors.ink, width: 1.3), borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(border: Border.all(color: AppColors.mist, width: 1.2), borderRadius: BorderRadius.circular(18)),
           child: Icon(icon, size: 18, color: AppColors.ink),
         ),
       ),

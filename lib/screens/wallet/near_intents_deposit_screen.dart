@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/api/callit_api.dart';
@@ -19,6 +20,7 @@ class NearIntentsDepositScreen extends StatefulWidget {
 
 class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
   final _amountController = TextEditingController(text: '1.0');
+  final _refundController = TextEditingController();
 
   String _selectedOrigin = 'wNEAR';
   bool _loadingQuote = false;
@@ -30,15 +32,47 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
 
   final List<Map<String, String>> _supportedAssets = [
     {'symbol': 'wNEAR', 'name': 'NEAR Protocol', 'blockchain': 'NEAR'},
-    {'symbol': 'ETH', 'name': 'Ethereum / Base', 'blockchain': 'EVM'},
+    {'symbol': 'ETH', 'name': 'Ether on Ethereum', 'blockchain': 'Ethereum'},
     {'symbol': 'SOL', 'name': 'Solana', 'blockchain': 'Solana'},
-    {'symbol': 'USDC', 'name': 'USD Coin (Any Chain)', 'blockchain': 'Multi-Chain'},
+    {'symbol': 'USDC', 'name': 'USDC on Ethereum', 'blockchain': 'Ethereum'},
   ];
+
+  /// Which chain the selected asset is sent from. The refund address has to
+  /// be on that chain, and it has to be the user's own.
+  String get _chain => _selectedOrigin == 'wNEAR' ? 'near' : _selectedOrigin == 'SOL' ? 'solana' : 'evm';
+
+  String get _refundLabel => switch (_chain) {
+        'near' => 'Your NEAR account (refund address)',
+        'solana' => 'Your Solana address (refund address)',
+        _ => 'Your Ethereum address (refund address)',
+      };
+
+  String get _refundHint => switch (_chain) {
+        'near' => 'you.near',
+        'solana' => 'Your Solana wallet address',
+        _ => '0x…',
+      };
+
+  String? _refundError() {
+    final v = _refundController.text.trim();
+    if (v.isEmpty) return 'Enter your own address so a failed swap is refunded to you.';
+    switch (_chain) {
+      case 'near':
+        final ok = RegExp(r'^[0-9a-f]{64}$').hasMatch(v) ||
+            (v.length >= 2 && v.length <= 64 && RegExp(r'^([a-z0-9]+([_-][a-z0-9]+)*\.)*[a-z0-9]+([_-][a-z0-9]+)*$').hasMatch(v));
+        return ok ? null : 'That is not a NEAR account. Use something like you.near.';
+      case 'solana':
+        return RegExp(r'^[1-9A-HJ-NP-Za-km-z]{32,44}$').hasMatch(v) ? null : 'That is not a Solana address.';
+      default:
+        return RegExp(r'^0x[0-9a-fA-F]{40}$').hasMatch(v) ? null : 'That is not an Ethereum address (0x followed by 40 characters).';
+    }
+  }
 
   @override
   void dispose() {
     _statusTimer?.cancel();
     _amountController.dispose();
+    _refundController.dispose();
     super.dispose();
   }
 
@@ -48,6 +82,12 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid deposit amount')),
       );
+      return;
+    }
+
+    final refundErr = _refundError();
+    if (refundErr != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(refundErr)));
       return;
     }
 
@@ -63,6 +103,7 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
       final res = await callitApi.createNearIntentQuote(
         originAsset: _selectedOrigin,
         amount: amount,
+        refundTo: _refundController.text.trim(),
         recipient: widget.walletAddress.isNotEmpty
             ? widget.walletAddress
             : TokenStore.instance.walletAddress,
@@ -121,13 +162,13 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: const [
-            Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
+            AppIcon(Ic.check, color: Colors.green, size: 28),
             SizedBox(width: 10),
             Text('Deposit Received!'),
           ],
         ),
         content: const Text(
-          'Your funds have been settled via NEAR Intents solvers and credited to your Callit account.',
+          'Your swap finished. The SOL or USDC is in your Solana wallet now. Pull down on the wallet screen to refresh your balance.',
         ),
         actions: [
           TextButton(
@@ -173,7 +214,7 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: const [
-                    Icon(Icons.bolt_rounded, color: Colors.amber, size: 16),
+                    AppIcon(Ic.bolt, color: Colors.amber, size: 16),
                     SizedBox(width: 6),
                     Flexible(
                       child: Text(
@@ -211,6 +252,7 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
                           if (val) {
                             setState(() {
                               _selectedOrigin = asset['symbol']!;
+                              _refundController.clear();
                               _activeQuote = null;
                               _depositAddress = null;
                             });
@@ -242,6 +284,31 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
                     _depositAddress = null;
                   });
                 },
+              ),
+              const SizedBox(height: 16),
+
+              // Refund address: must be the user's own, on the chain they pay from
+              Text(_refundLabel, style: AppTextStyles.h3),
+              const SizedBox(height: 6),
+              Text(
+                'If the swap cannot finish, your funds go back here. Use your own address.',
+                style: AppTextStyles.body(12, color: AppColors.slate),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _refundController,
+                autocorrect: false,
+                enableSuggestions: false,
+                decoration: InputDecoration(
+                  hintText: _refundHint,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  filled: true,
+                  fillColor: AppColors.white,
+                ),
+                onChanged: (_) => setState(() {
+                  _activeQuote = null;
+                  _depositAddress = null;
+                }),
               ),
               const SizedBox(height: 16),
 
@@ -288,9 +355,9 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
                     children: [
                       Text('Guaranteed Intent Quote', style: AppTextStyles.h3),
                       const SizedBox(height: 12),
-                      _row('You Send', '${_activeQuote!['amountInFormatted'] ?? _amountController.text} $_selectedOrigin (~\$${_activeQuote!['amountInUsd'] ?? '--'})'),
+                      _row('You Send', '${_activeQuote!['amountInFormatted'] ?? _amountController.text} $_selectedOrigin (~${_usd(_activeQuote!['amountInUsd'])})'),
                       const Divider(height: 18),
-                      _row('You Receive', '${_activeQuote!['amountOutFormatted'] ?? '--'} Destination Asset (~\$${_activeQuote!['amountOutUsd'] ?? '--'})'),
+                      _row('You Receive', '${_amt(_activeQuote!['amountOutFormatted'])} SOL (~${_usd(_activeQuote!['amountOutUsd'])})'),
                       const Divider(height: 18),
                       _row('Settlement Time', '~${_activeQuote!['timeEstimateSec'] ?? 19} seconds'),
                       const Divider(height: 18),
@@ -308,7 +375,7 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.white,
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: AppColors.ink, width: 1.5),
+                    border: Border.all(color: AppColors.mist, width: 1.2),
                   ),
                   child: Column(
                     children: [
@@ -360,7 +427,7 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.copy_rounded, size: 20),
+                              icon: const AppIcon(Ic.copy, size: 20),
                               onPressed: () => _copyToClipboard(_depositAddress!),
                             ),
                           ],
@@ -383,12 +450,26 @@ class _NearIntentsDepositScreenState extends State<NearIntentsDepositScreen> {
     );
   }
 
+  /// "3.220000000000" -> "$3.22"
+  String _usd(dynamic v) {
+    final n = double.tryParse('${v ?? ''}');
+    return n == null ? '--' : '\$${n.toStringAsFixed(2)}';
+  }
+
+  /// "0.043120805" -> "0.0431"
+  String _amt(dynamic v) {
+    final n = double.tryParse('${v ?? ''}');
+    if (n == null) return '--';
+    return n >= 1 ? n.toStringAsFixed(2) : n.toStringAsFixed(4);
+  }
+
   Widget _row(String label, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: AppTextStyles.body(14, color: AppColors.slate)),
-        Text(value, style: AppTextStyles.body(14, color: AppColors.ink)),
+        const SizedBox(width: 12),
+        Expanded(child: Text(value, textAlign: TextAlign.right, style: AppTextStyles.body(14, color: AppColors.ink))),
       ],
     );
   }

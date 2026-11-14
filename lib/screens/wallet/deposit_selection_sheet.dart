@@ -187,7 +187,7 @@ class _DepositOptionTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.ink, width: 1.2),
+            border: Border.all(color: AppColors.mist, width: 1.2),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -197,8 +197,8 @@ class _DepositOptionTile extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: badge.contains('1-Click') ? AppColors.highlight : AppColors.mist,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.ink, width: 1.1),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.mist, width: 1.2),
                 ),
                 child: Icon(icon, size: 22, color: AppColors.ink),
               ),
@@ -218,7 +218,7 @@ class _DepositOptionTile extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: badge.contains('1-Click') ? AppColors.highlight : AppColors.mist,
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: AppColors.ink, width: 0.8),
                           ),
                           child: Text(

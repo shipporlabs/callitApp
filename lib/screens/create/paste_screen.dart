@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import 'package:flutter/services.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/api/callit_api.dart';
@@ -103,13 +104,13 @@ class _PasteScreenState extends State<PasteScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.ink, width: 1.2),
-                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: AppColors.mist, width: 1.2),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.groups_outlined, size: 14, color: AppColors.ink),
+                              const AppIcon(Ic.group, size: 14, color: AppColors.ink),
                               const SizedBox(width: 6),
                               Text('Posting to ${widget.initialCommunity!.name}', style: AppTextStyles.body(12, weight: FontWeight.w600)),
                             ],
@@ -141,7 +142,7 @@ class _PasteScreenState extends State<PasteScreen> {
                       alignment: Alignment.centerLeft,
                       child: TextButton.icon(
                         onPressed: _pasteFromClipboard,
-                        icon: const Icon(Icons.content_paste_rounded, size: 16),
+                        icon: const AppIcon(Ic.paste, size: 16),
                         label: const Text('Paste from clipboard'),
                       ),
                     ),

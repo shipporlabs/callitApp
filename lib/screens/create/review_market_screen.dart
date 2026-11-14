@@ -2,6 +2,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/api/token_store.dart';
@@ -260,7 +261,7 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.hub_outlined, size: 20, color: AppColors.slate),
+                    const AppIcon(Ic.group, size: 20, color: AppColors.slate),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -277,7 +278,7 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded, color: AppColors.slate),
+                    const AppIcon(Ic.chevronRight, color: AppColors.slate),
                   ],
                 ),
               ),
@@ -329,7 +330,7 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.image_rounded, size: 14, color: AppColors.paper),
+                          const AppIcon(Ic.image, size: 14, color: AppColors.paper),
                           const SizedBox(width: 5),
                           Text('Category Banner', style: AppTextStyles.caption.copyWith(color: AppColors.paper, fontWeight: FontWeight.w600)),
                         ],
@@ -373,7 +374,7 @@ class _ReviewMarketScreenState extends State<ReviewMarketScreen> {
                     onPressed: _uploadingImage ? null : _requestImageUploadSignature,
                     icon: _uploadingImage
                         ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.upload_file_rounded, size: 16),
+                        : const AppIcon(Ic.upload, size: 16),
                     label: Text(_uploadingImage ? 'Signing…' : 'Sign & Upload via Panta', style: AppTextStyles.body(13, weight: FontWeight.w600)),
                   ),
                   TextButton(

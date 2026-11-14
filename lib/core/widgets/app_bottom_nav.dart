@@ -1,80 +1,69 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
+import 'app_icon.dart';
 
+/// Floating pill navigation: soft border, no shadow. The selected tab gets an
+/// ink disc, Create is the one yellow action.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({super.key, required this.currentIndex, required this.onTap});
 
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  static const _items = [
-    (icon: Icons.home_rounded, label: 'Home'),
-    (icon: Icons.search_rounded, label: 'Markets'),
-    (icon: null, label: 'Create'), // center action, styled differently
-    (icon: Icons.person_rounded, label: 'Profile'),
+  static const _items = <({List<List<dynamic>>? icon, String label})>[
+    (icon: Ic.home, label: 'Home'),
+    (icon: Ic.search, label: 'Markets'),
+    (icon: null, label: 'Create'),
+    (icon: Ic.user, label: 'Profile'),
   ];
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: Container(
-        height: 74,
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          border: Border(top: BorderSide(color: AppColors.ink, width: 1.3)),
-        ),
-        child: Row(
-          children: List.generate(_items.length, (index) {
-            final item = _items[index];
-            final selected = index == currentIndex;
-
-            if (item.icon == null) {
-              // Center "Create" button — a boxy, bordered highlight square.
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+        child: Container(
+          height: 68,
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.mist, width: 1.2),
+          ),
+          child: Row(
+            children: List.generate(_items.length, (index) {
+              final item = _items[index];
+              final selected = index == currentIndex;
               return Expanded(
-                child: Center(
+                child: Semantics(
+                  button: true,
+                  label: item.label,
+                  selected: selected,
                   child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () => onTap(index),
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.highlight,
-                        border: Border.all(color: AppColors.ink, width: 1.4),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Icon(Icons.add_rounded, color: AppColors.ink, size: 24),
+                    child: Center(
+                      child: item.icon == null
+                          ? Container(
+                              width: 50,
+                              height: 50,
+                              decoration: const BoxDecoration(color: AppColors.highlight, shape: BoxShape.circle),
+                              child: const Center(child: AppIcon(Ic.add, size: 24, strokeWidth: 2)),
+                            )
+                          : AnimatedContainer(
+                              duration: const Duration(milliseconds: 220),
+                              curve: Curves.easeOut,
+                              width: 46,
+                              height: 46,
+                              decoration: BoxDecoration(color: selected ? AppColors.ink : Colors.transparent, shape: BoxShape.circle),
+                              child: Center(child: AppIcon(item.icon!, size: 22, color: selected ? AppColors.paper : AppColors.slate)),
+                            ),
                     ),
                   ),
                 ),
               );
-            }
-
-            final color = selected ? AppColors.ink : AppColors.slate;
-            return Expanded(
-              child: InkWell(
-                onTap: () => onTap(index),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: selected ? Border.all(color: AppColors.ink, width: 1.3) : null,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(item.icon, color: color, size: 20),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(item.label.toUpperCase(), style: AppTextStyles.label(10, weight: FontWeight.w600, color: color)),
-                  ],
-                ),
-              ),
-            );
-          }),
+            }),
+          ),
         ),
       ),
     );

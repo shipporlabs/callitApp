@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_button.dart';
@@ -107,7 +108,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppColors.white,
-                  border: Border.all(color: AppColors.ink, width: 1.3),
+                  border: Border.all(color: AppColors.mist, width: 1.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -197,13 +198,13 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
                   decoration: BoxDecoration(
                     color: AppColors.white,
-                    border: Border.all(color: AppColors.ink, width: 1.3),
-                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.mist, width: 1.2),
+                    borderRadius: BorderRadius.circular(18),
                   ),
                   child: Center(
                     child: Column(
                       children: [
-                        const Icon(Icons.hub_outlined, size: 40, color: AppColors.slate),
+                        const AppIcon(Ic.group, size: 40, color: AppColors.slate),
                         const SizedBox(height: 12),
                         Text('No markets created here yet', style: AppTextStyles.h3),
                         const SizedBox(height: 6),
@@ -242,8 +243,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.paper,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.ink, width: 1.2),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.mist, width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,60 +1,74 @@
+import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// JetBrains Mono end to end — display, body, everything — for the
-/// "technical blueprint" look: monospace type, tabular figures by
-/// default wherever numbers show up (odds, prices, wallet addresses).
+/// Type system, matching the Callit website:
+///  - Instrument Serif for big headings (regular only),
+///  - Onest for everything else, never heavier than Medium (500).
+/// Size does the work, not weight. Numbers use tabular figures.
 class AppTextStyles {
   AppTextStyles._();
 
-  static TextStyle get _display => GoogleFonts.jetBrainsMono();
-  static TextStyle get _body => GoogleFonts.jetBrainsMono();
+  static TextStyle get _serif => GoogleFonts.instrumentSerif();
+  static TextStyle get _sans => GoogleFonts.onest();
 
-  static TextStyle display(double size, {FontWeight weight = FontWeight.w700, Color? color, double? height, double? letterSpacing}) {
-    return _display.copyWith(
+  /// Anything bolder than Medium is clamped to Medium.
+  static FontWeight cap(FontWeight w) => w.value >= 500 ? FontWeight.w500 : FontWeight.w400;
+
+  /// Headings. From 22px up this is Instrument Serif; smaller "display"
+  /// text (card titles) falls back to Onest Medium so it stays readable.
+  static TextStyle display(double size, {FontWeight weight = FontWeight.w400, Color? color, double? height, double? letterSpacing}) {
+    if (size >= 22) {
+      return _serif.copyWith(
+        fontSize: size,
+        fontWeight: FontWeight.w400,
+        color: color ?? AppColors.ink,
+        height: height ?? 1.04,
+        letterSpacing: letterSpacing ?? -size * 0.012,
+      );
+    }
+    return _sans.copyWith(
       fontSize: size,
-      fontWeight: weight,
+      fontWeight: FontWeight.w500,
       color: color ?? AppColors.ink,
-      height: height,
-      letterSpacing: letterSpacing ?? -0.5,
+      height: height ?? 1.3,
+      letterSpacing: letterSpacing ?? -0.1,
     );
   }
 
   static TextStyle body(double size, {FontWeight weight = FontWeight.w400, Color? color, double? height}) {
-    return _body.copyWith(
+    return _sans.copyWith(
       fontSize: size,
-      fontWeight: weight,
+      fontWeight: cap(weight),
       color: color ?? AppColors.ink,
       height: height ?? 1.45,
     );
   }
 
-  static TextStyle tabularNums(double size, {FontWeight weight = FontWeight.w700, Color? color}) {
-    return _body.copyWith(
+  static TextStyle tabularNums(double size, {FontWeight weight = FontWeight.w500, Color? color}) {
+    return _sans.copyWith(
       fontSize: size,
-      fontWeight: weight,
+      fontWeight: cap(weight),
       color: color ?? AppColors.ink,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
   }
 
-  /// A small uppercase, letter-spaced label — "01 — TRENDING", "TRANSFER
-  /// EXACTLY" — used for section numbering and eyebrow text.
-  static TextStyle label(double size, {FontWeight weight = FontWeight.w700, Color? color}) {
-    return _body.copyWith(
+  /// A small, letter-spaced eyebrow label: "TRENDING", "TRANSFER EXACTLY".
+  static TextStyle label(double size, {FontWeight weight = FontWeight.w500, Color? color}) {
+    return _sans.copyWith(
       fontSize: size,
-      fontWeight: weight,
+      fontWeight: cap(weight),
       color: color ?? AppColors.slate,
-      letterSpacing: 1.1,
+      letterSpacing: 0.9,
     );
   }
 
-  // Convenience presets used across screens
-  static TextStyle get h1 => display(34, weight: FontWeight.w700, letterSpacing: -0.5);
-  static TextStyle get h2 => display(26, weight: FontWeight.w700, letterSpacing: -0.3);
-  static TextStyle get h3 => display(20, weight: FontWeight.w600, letterSpacing: -0.2);
+  static TextStyle get h1 => display(44, letterSpacing: -0.6);
+  static TextStyle get h2 => display(32, letterSpacing: -0.4);
+  static TextStyle get h3 => display(20);
   static TextStyle get subtitle => body(16, color: AppColors.slate, height: 1.5);
   static TextStyle get caption => body(13, color: AppColors.slate);
-  static TextStyle get button => _body.copyWith(fontSize: 15, fontWeight: FontWeight.w700);
+  static TextStyle get button => _sans.copyWith(fontSize: 16, fontWeight: FontWeight.w500);
 }

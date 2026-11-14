@@ -18,17 +18,12 @@ class PillChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isInkOrMist = background == AppColors.mist || background == AppColors.ink;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: dense ? 9 : 13, vertical: dense ? 4 : 7),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(4),
-        border: isInkOrMist ? null : Border.all(color: AppColors.ink, width: 1.2),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: dense ? 11 : 14, vertical: dense ? 5 : 8),
+      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(999)),
       child: Text(
         label.toUpperCase(),
-        style: AppTextStyles.label(dense ? 10.5 : 12, weight: FontWeight.w700, color: foreground),
+        style: AppTextStyles.label(dense ? 10.5 : 12, color: foreground),
       ),
     );
   }

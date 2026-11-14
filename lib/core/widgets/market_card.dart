@@ -16,16 +16,15 @@ class MarketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.white,
-      borderRadius: BorderRadius.circular(10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: const BorderSide(color: AppColors.mist, width: 1.2),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.ink, width: 1.3),
-            borderRadius: BorderRadius.circular(10),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -34,41 +33,29 @@ class MarketCard extends StatelessWidget {
                 children: [
                   PillChip(label: market.category, dense: true),
                   if (market.isGraduated)
-                    const PillChip(
-                      label: 'GRADUATED',
-                      dense: true,
-                      background: AppColors.highlight,
-                      foreground: AppColors.ink,
-                    ),
+                    const PillChip(label: 'Graduated', dense: true, background: AppColors.tint2, foreground: AppColors.ink),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Text(
                 market.question,
-                style: AppTextStyles.display(16.5, weight: FontWeight.w600, height: 1.3),
+                style: AppTextStyles.body(18, weight: FontWeight.w500, height: 1.3),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               YesNoBar(yesPct: market.yesPricePct),
               if (market.creatorHandle.isNotEmpty || market.volumeLabel != null) ...[
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     if (market.creatorHandle.isNotEmpty) ...[
-                      AppAvatar(initials: market.creatorInitials, size: 22),
+                      AppAvatar(initials: market.creatorInitials, size: 24),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          market.creatorHandle,
-                          style: AppTextStyles.caption,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+                      Expanded(child: Text(market.creatorHandle, style: AppTextStyles.caption, overflow: TextOverflow.ellipsis)),
                     ] else
                       const Spacer(),
-                    if (market.volumeLabel != null)
-                      Text(market.volumeLabel!, style: AppTextStyles.caption),
+                    if (market.volumeLabel != null) Text(market.volumeLabel!, style: AppTextStyles.caption),
                   ],
                 ),
               ],

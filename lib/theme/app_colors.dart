@@ -20,6 +20,13 @@ class AppColors {
   static const Color inkMuted = Color(0xFF9FA3B8);
   static const Color inkMuted2 = Color(0xFFC9CBD8);
 
+  // Soft tints of the accent, for illustration panels and glows (22% / 42% yellow on white).
+  static const Color tint = Color(0xFFFFF5D5);
+  static const Color tint2 = Color(0xFFFFECAE);
+
   static const Color success = yes;
+
+  /// Arrow-disc colour for the two filled button variants.
+  static Color yellowOrInk(Object variant) => variant.toString().endsWith('secondary') ? ink : highlight;
   static const Color danger = no;
 }

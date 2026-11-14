@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '../app_images.dart';
-import 'app_image.dart';
 
-/// The Callit logomark — a ring with a check stroke, drawn with
-/// CustomPaint so it never depends on an asset file. Pass
-/// `useAsset: true` to swap in `assets/icons/logo.png` once you have one.
+/// The Callit mark: a yellow ring with a teal wedge on the right, an ink
+/// outline and a dot in the middle — the same mark as the website.
+/// [color] is kept for older call sites: a light colour means "on a dark
+/// surface", so the outline and dot switch to paper.
 class AppLogo extends StatelessWidget {
   const AppLogo({super.key, this.size = 32, this.color = AppColors.ink, this.useAsset = false});
 
@@ -15,46 +14,44 @@ class AppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useAsset) {
-      return AppImage(AppImages.logo, width: size, height: size, fallbackIcon: Icons.check_circle_outline);
-    }
+    final onDark = color.computeLuminance() > 0.6;
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(painter: _LogoPainter(color: color)),
+      child: CustomPaint(painter: LogoMarkPainter(outline: onDark ? AppColors.paper : AppColors.ink)),
     );
   }
 }
 
-class _LogoPainter extends CustomPainter {
-  _LogoPainter({required this.color});
-  final Color color;
+class LogoMarkPainter extends CustomPainter {
+  LogoMarkPainter({required this.outline});
+  final Color outline;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final ringPaint = Paint()
-      ..color = color
+    final s = size.width;
+    final c = Offset(s / 2, s / 2);
+    final outerR = s / 2 * 0.95;
+    final innerR = outerR * 0.58;
+    final mid = (outerR + innerR) / 2;
+    final w = outerR - innerR;
+    final rect = Rect.fromCircle(center: c, radius: mid);
+    final ring = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.07;
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width / 2) - ringPaint.strokeWidth;
-    canvas.drawCircle(center, radius, ringPaint);
-
-    final checkPaint = Paint()
-      ..color = color
+      ..strokeWidth = w
+      ..strokeCap = StrokeCap.butt;
+    const pi = 3.141592653589793;
+    canvas.drawArc(rect, pi / 4, 3 * pi / 2, false, ring..color = AppColors.highlight);
+    canvas.drawArc(rect, -pi / 4, pi / 2, false, ring..color = AppColors.yes);
+    final line = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.085
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path()
-      ..moveTo(size.width * 0.31, size.height * 0.52)
-      ..lineTo(size.width * 0.44, size.height * 0.65)
-      ..lineTo(size.width * 0.70, size.height * 0.36);
-
-    canvas.drawPath(path, checkPaint);
+      ..strokeWidth = s * 0.035
+      ..color = outline;
+    canvas.drawCircle(c, outerR - line.strokeWidth / 2, line);
+    canvas.drawCircle(c, innerR + line.strokeWidth / 2, line);
+    canvas.drawCircle(c, s * 0.12, Paint()..color = outline);
   }
 
   @override
-  bool shouldRepaint(covariant _LogoPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(covariant LogoMarkPainter old) => old.outline != outline;
 }

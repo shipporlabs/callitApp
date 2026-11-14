@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import 'package:flutter/services.dart';
 import '../../core/api/callit_api.dart';
 import '../../core/widgets/app_button.dart';
@@ -257,7 +258,7 @@ class _FundWalletScreenState extends State<FundWalletScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.info_outline_rounded, color: Colors.amber.shade900),
+              AppIcon(Ic.info, color: Colors.amber.shade900),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -308,7 +309,7 @@ class _FundWalletScreenState extends State<FundWalletScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () => _copyToClipboard(accountNumber, 'Account number'),
-                    icon: const Icon(Icons.copy_rounded, size: 16),
+                    icon: const AppIcon(Ic.copy, size: 16),
                     label: const Text('Copy'),
                   ),
                 ],
@@ -366,7 +367,7 @@ class _FundWalletScreenState extends State<FundWalletScreen> {
             width: 80,
             height: 80,
             decoration: const BoxDecoration(color: AppColors.yes, shape: BoxShape.circle),
-            child: const Icon(Icons.check_rounded, color: AppColors.white, size: 48),
+            child: const AppIcon(Ic.tick, color: AppColors.white, size: 48),
           ),
           const SizedBox(height: 24),
           Text('Deposit Confirmed!', style: AppTextStyles.h1, textAlign: TextAlign.center),

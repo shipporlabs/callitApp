@@ -294,6 +294,7 @@ class CallitApi {
     required String amount,
     String? recipient,
     String? destinationAsset,
+    String? refundTo,
     bool dry = false,
   }) async {
     final data = await _c.post('/near/deposit/quote', body: {
@@ -301,8 +302,16 @@ class CallitApi {
       'amount': amount,
       if (recipient != null && recipient.isNotEmpty) 'recipient': recipient,
       if (destinationAsset != null) 'destinationAsset': destinationAsset,
+      if (refundTo != null && refundTo.isNotEmpty) 'refundTo': refundTo,
       'dry': dry,
     });
+    return (data as Map?)?.cast<String, dynamic>() ?? {};
+  }
+
+  /// SOL and USDC balances for a wallet, read by the backend. Browsers cannot
+  /// call Solana's public RPC directly (it answers 403), so the app asks here.
+  Future<Map<String, dynamic>> getWalletBalances(String wallet, {bool fresh = false}) async {
+    final data = await _c.get('/wallets/$wallet/balances', query: fresh ? {'fresh': '1'} : null, auth: false);
     return (data as Map?)?.cast<String, dynamic>() ?? {};
   }
 

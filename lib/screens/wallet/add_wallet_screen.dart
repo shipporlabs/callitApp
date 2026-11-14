@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../../core/widgets/app_icon.dart';
 import '../../core/app_images.dart';
 import '../../core/api/token_store.dart';
 import '../../core/widgets/app_image.dart';
@@ -196,7 +197,7 @@ class _WalletOption extends StatelessWidget {
               if (connecting)
                 const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2))
               else
-                const Icon(Icons.chevron_right_rounded, color: AppColors.slate),
+                const AppIcon(Ic.chevronRight, color: AppColors.slate),
             ],
           ),
         ),
